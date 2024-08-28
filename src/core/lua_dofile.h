@@ -14,6 +14,9 @@
 #define nameof_main "main"
 
 SKYNET_API int lua_dofile(lua_State* L);
+SKYNET_API typeof<io::service> skynet_service(int osid);
+
+#define find_service(id) skynet_service(id)
 
 /********************************************************************************/
 

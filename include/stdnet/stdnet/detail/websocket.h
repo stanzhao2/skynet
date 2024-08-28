@@ -705,11 +705,11 @@ template <typename Socket, typename Handler>
 void async_receive(Socket peer, Handler&& handler) {
   peer->async_receive(
     [=](const error_code& ec, const char* data, size_t size) {
-    pcall(handler, ec, data, size);
-    if (!ec && peer->is_open()) {
-      async_receive(peer, handler);
+      pcall(handler, ec, data, size);
+      if (!ec && peer->is_open()) {
+        async_receive(peer, handler);
+      }
     }
-  }
   );
 }
 
