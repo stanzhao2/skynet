@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\core\lua_bind.cpp" />
+    <ClCompile Include="..\src\core\lua_core.cpp" />
+    <ClCompile Include="..\src\core\lua_dofile.cpp" />
+    <ClCompile Include="..\src\core\lua_path.cpp" />
+    <ClCompile Include="..\src\core\lua_pcall.cpp" />
+    <ClCompile Include="..\src\core\lua_pload.cpp" />
+    <ClCompile Include="..\src\core\lua_print.cpp" />
+    <ClCompile Include="..\src\core\lua_require.cpp" />
+    <ClCompile Include="..\src\core\lua_socket.cpp" />
+    <ClCompile Include="..\src\core\lua_timer.cpp" />
+    <ClCompile Include="..\src\core\lua_wrap.cpp" />
+    <ClCompile Include="..\src\extend\http\parser.cpp" />
+    <ClCompile Include="..\src\extend\lua_deflate.cpp" />
+    <ClCompile Include="..\src\extend\lua_http.cpp" />
+    <ClCompile Include="..\src\extend\lua_json.cpp" />
+    <ClCompile Include="..\src\extend\lua_list.cpp" />
+    <ClCompile Include="..\src\extend\lua_openssl.cpp" />
+    <ClCompile Include="..\src\extend\lua_storage.cpp" />
+    <ClCompile Include="..\src\extend\lua_string.cpp" />
+    <ClCompile Include="..\src\extend\rapidjson\document.cpp" />
+    <ClCompile Include="..\src\extend\rapidjson\rapidjson.cpp" />
+    <ClCompile Include="..\src\extend\rapidjson\schema.cpp" />
+    <ClCompile Include="..\src\extend\rapidjson\values.cpp" />
+    <ClCompile Include="..\src\skynet.cpp" />
+    <ClCompile Include="..\src\skynet_allotor.cpp" />
+    <ClCompile Include="..\src\skynet_lua.cpp" />
+    <ClCompile Include="..\src\skynet_main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\core\lua_bind.h" />
+    <ClInclude Include="..\src\core\lua_core.h" />
+    <ClInclude Include="..\src\core\lua_dofile.h" />
+    <ClInclude Include="..\src\core\lua_path.h" />
+    <ClInclude Include="..\src\core\lua_pcall.h" />
+    <ClInclude Include="..\src\core\lua_pload.h" />
+    <ClInclude Include="..\src\core\lua_print.h" />
+    <ClInclude Include="..\src\core\lua_require.h" />
+    <ClInclude Include="..\src\core\lua_socket.h" />
+    <ClInclude Include="..\src\core\lua_timer.h" />
+    <ClInclude Include="..\src\core\lua_wrap.h" />
+    <ClInclude Include="..\src\extend\http\parser.h" />
+    <ClInclude Include="..\src\extend\lua_deflate.h" />
+    <ClInclude Include="..\src\extend\lua_http.h" />
+    <ClInclude Include="..\src\extend\lua_json.h" />
+    <ClInclude Include="..\src\extend\lua_list.h" />
+    <ClInclude Include="..\src\extend\lua_openssl.h" />
+    <ClInclude Include="..\src\extend\lua_storage.h" />
+    <ClInclude Include="..\src\extend\lua_string.h" />
+    <ClInclude Include="..\src\skynet.h" />
+    <ClInclude Include="..\src\skynet_allotor.h" />
+    <ClInclude Include="..\src\skynet_lua.h" />
+    <ClInclude Include="..\src\skynet_main.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{695e5ca3-9499-4766-8a02-add76150b38f}</ProjectGuid>
+    <RootNamespace>skynet</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <IncludePath>..\include;..\include\asio;..\include\stdnet;..\3rd\lua\5.4\src;..\3rd\zlib;..\3rd\openssl;$(IncludePath)</IncludePath>
+    <LibraryPath>..\3rd\lua\5.4\src;..\3rd\zlib\lib;..\3rd\openssl;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <IncludePath>..\include;..\include\asio;..\include\stdnet;..\3rd\lua\5.4\src;..\3rd\zlib;..\3rd\openssl;$(IncludePath)</IncludePath>
+    <LibraryPath>..\3rd\lua\5.4\src;..\3rd\zlib\lib;..\3rd\openssl;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>STDNET_USE_OPENSSL;STDNET_USE_DEFLATE;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>lua54.lib;libcrypto.lib;libssl.lib;zlibstat.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>STDNET_USE_OPENSSL;STDNET_USE_DEFLATE;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>lua54.lib;libcrypto.lib;libssl.lib;zlibstat.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
