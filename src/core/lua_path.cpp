@@ -5,7 +5,7 @@
 /********************************************************************************/
 
 static const char* luapath[] = {
-  "lua" LUA_DIRSEP "?.lua", "lua" LUA_DIRSEP "?" LUA_DIRSEP "init.lua", NULL
+  "?.lua", "?" LUA_DIRSEP "init.lua", "lua" LUA_DIRSEP "?.lua", "lua" LUA_DIRSEP "?" LUA_DIRSEP "init.lua", NULL
 };
 
 static const char* luacpath[] = {
