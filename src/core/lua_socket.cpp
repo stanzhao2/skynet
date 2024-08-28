@@ -186,7 +186,7 @@ struct lua_socket final {
     int handler = lua_ref(L, 4);
     async_connect(socket, host, port,
       [handler](const error_code& ec) {
-        lua_State* L = skynet_local();
+        lua_State* L = lua_local();
         lua_auto_revert revert(L);
         lua_auto_unref  unref(L, handler);
 
@@ -250,7 +250,7 @@ struct lua_socket final {
     int handler = lua_ref(L, 2);
     async_receive(socket,
       [handler](const error_code& ec, const char* data, size_t size) {
-        lua_State* L = skynet_local();
+        lua_State* L = lua_local();
         lua_auto_revert revert(L);
         lua_auto_unref  unref(L, handler);
         if (!ec) {
@@ -288,7 +288,7 @@ struct lua_socket final {
     int handler = lua_ref(L, 3);
     socket->async_send(data, size,
       [handler](const error_code& ec, size_t size) {
-        lua_State* L = skynet_local();
+        lua_State* L = lua_local();
         lua_auto_revert revert(L);
         lua_auto_unref  unref(L, handler);
 
@@ -429,7 +429,7 @@ struct lua_acceptor final {
 
     auto ec = server->listen(port, host,
       [handler, this](const error_code& ec, typeof<io::socket> peer) {
-        lua_State* L = skynet_local();
+        lua_State* L = lua_local();
         lua_auto_revert revert(L);
         lua_auto_unref  unref(L, handler);
         if (!ec) {

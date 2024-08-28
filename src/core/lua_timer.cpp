@@ -6,7 +6,7 @@
 
 struct class_timer final {
   inline class_timer(lua_State* lua)
-    : timer(*skynet_service())
+    : timer(*lua_service())
     , L(lua) {
   }
   int __expires() {

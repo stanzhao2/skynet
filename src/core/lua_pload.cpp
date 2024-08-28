@@ -72,19 +72,19 @@ static void clonepath(lua_State* from, lua_State* to, const char* name) {
 
 /* current microservice thread */
 static void pload_thread(lua_State* L, pload_context* context) {
-  context->L = skynet_local();
+  context->L = lua_local();
   if (!context->L) {
     context->state = pload_state::error;
     context->error = "no memory";
     return;
   }
-  context->ios = skynet_service();
+  context->ios = lua_service();
   clonepath(L, context->L, "path");
   clonepath(L, context->L, "cpath");
 
   int argc = 1;
   L = context->L;
-  lua_pushcfunction(L, skynet_dofile);
+  lua_pushcfunction(L, lua_dofile);
   lua_pushstring(L, context->name.c_str());
 
   if (!context->argv.empty()) {

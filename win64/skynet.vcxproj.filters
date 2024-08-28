@@ -42,9 +42,6 @@
     <ClCompile Include="..\src\core\lua_bind.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\lua_core.cpp">
-      <Filter>源文件\core</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\lua_dofile.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
@@ -106,6 +103,9 @@
       <Filter>源文件\core</Filter>
     </ClCompile>
     <ClCompile Include="..\src\core\lua_socket.cpp">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\lua_core.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
   </ItemGroup>

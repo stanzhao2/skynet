@@ -52,7 +52,7 @@ static bool cmd_intevel(int argc, const char* argv[]) {
 }
 
 static void lua_pload(int argc, const char* argv[]) {
-  skynet_main(skynet_local(), argc, argv);
+  skynet_main(lua_local(), argc, argv);
 }
 
 static bool is_delimiter(char c) {
@@ -122,7 +122,7 @@ SKYNET_API int main(int argc, const char* argv[]) {
 #ifdef _MSC_VER
   SetConsoleOutputCP(65001);
 #endif
-  auto L = skynet_local();
+  auto L = lua_local();
   const char* progname = argv[0];
   progname = parse_progname(progname);
   if (argc > 1) {

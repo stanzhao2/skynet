@@ -41,7 +41,7 @@ static const char* normal(const char* filename, char* out) {
   return out;
 }
 
-SKYNET_API int skynet_dofile(lua_State* L) {
+SKYNET_API int lua_dofile(lua_State* L) {
   char name[2048];
   const char* filename = luaL_checkstring(L, 1);
   filename = normal(filename, name);

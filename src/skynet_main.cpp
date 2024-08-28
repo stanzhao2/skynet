@@ -53,7 +53,7 @@ static void pushargv(lua_State* L, int argc, const char** argv) {
 static int pmain(lua_State* L) {
   int argc = (int)luaL_checkinteger(L, 1);
   const char** argv = (const char**)lua_touserdata(L, 2);
-  lua_pushcfunction(L, skynet_dofile);
+  lua_pushcfunction(L, lua_dofile);
   pushargv(L, argc, argv);
   if (lua_pcall(L, argc, 0) != LUA_OK) {
     lua_error(L);
@@ -65,7 +65,7 @@ static int pmain(lua_State* L) {
 
 SKYNET_API void skynet_main(lua_State* L, int argc, const char* argv[]) {
   error_code ec;
-  auto local = skynet_service();
+  auto local = lua_service();
   local->signal().add(SIGINT,  ec);
   local->signal().add(SIGTERM, ec);
   local->signal().async_wait(

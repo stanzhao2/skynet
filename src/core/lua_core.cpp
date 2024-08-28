@@ -191,13 +191,13 @@ static int os_clock(lua_State *L) {
 }
 
 static int os_stopped(lua_State* L) {
-  auto ios = skynet_service();
+  auto ios = lua_service();
   lua_pushboolean(L, ios->stopped());
   return 1;
 }
 
 static int os_id(lua_State* L) {
-  auto ios = skynet_service();
+  auto ios = lua_service();
   lua_pushinteger(L, ios->id());
   return 1;
 }
@@ -214,7 +214,7 @@ static int os_processors(lua_State* L) {
 
 /* exit the current microservice */
 static int os_stop(lua_State* L) {
-  auto ios = skynet_service();
+  auto ios = lua_service();
   ios->stop();
   return 0;
 }
@@ -226,7 +226,7 @@ static int os_exit(lua_State* L) {
 }
 
 static int os_restart(lua_State* L) {
-  auto ios = skynet_service();
+  auto ios = lua_service();
   ios->restart();
   return 0;
 }
@@ -241,9 +241,9 @@ static int os_post(lua_State* L) {
     params.push_back(lua_ref(L, i));
   }
 
-  auto executor = skynet_service();
+  auto executor = lua_service();
   executor->post([handler, params]() {
-    lua_State* L = skynet_local();
+    lua_State* L = lua_local();
     lua_auto_revert revert(L);
     lua_auto_unref  unref(L, handler);
     if (lua_pushref(L, handler) != LUA_TFUNCTION) {
@@ -269,7 +269,7 @@ static int os_wait(lua_State* L) {
     }
   }
   size_t count = 0;
-  auto ios = skynet_service();
+  auto ios = lua_service();
   auto expires = luaL_optinteger(L, 1, -1);
   if (expires < 0) {
     count = ios->run();
