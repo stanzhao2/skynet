@@ -63,7 +63,7 @@ static int pmain(lua_State* L) {
 
 /***********************************************************************************/
 
-SKYNET_API void skynet_pmain(lua_State* L, int argc, const char* argv[]) {
+SKYNET_API void skynet_main(lua_State* L, int argc, const char* argv[]) {
   error_code ec;
   auto local = skynet_service();
   local->signal().add(SIGINT,  ec);

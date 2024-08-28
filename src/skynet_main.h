@@ -11,7 +11,7 @@
 
 /***********************************************************************************/
 
-SKYNET_API void skynet_pmain(lua_State* L, int argc, const char* argv[]);
+SKYNET_API void skynet_main(lua_State* L, int argc, const char* argv[]);
 
 /***********************************************************************************/
 

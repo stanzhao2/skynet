@@ -52,7 +52,7 @@ static bool cmd_intevel(int argc, const char* argv[]) {
 }
 
 static void lua_pload(int argc, const char* argv[]) {
-  skynet_pmain(skynet_local(), argc, argv);
+  skynet_main(skynet_local(), argc, argv);
 }
 
 static bool is_delimiter(char c) {
