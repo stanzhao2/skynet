@@ -2,6 +2,8 @@
 
 #include "lua_deflate.h"
 
+#ifdef STDNET_USE_DEFLATE
+
 /********************************************************************************/
 
 static int gzip_deflate(lua_State *L) {
@@ -55,3 +57,9 @@ SKYNET_API int luaopen_deflate(lua_State* L) {
 }
 
 /********************************************************************************/
+
+#else
+
+SKYNET_API int luaopen_deflate(lua_State* L) { return 0; }
+
+#endif //STDNET_USE_DEFLATE

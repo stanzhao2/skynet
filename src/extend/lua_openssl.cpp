@@ -2,6 +2,8 @@
 
 #include "lua_openssl.h"
 
+#ifdef STDNET_USE_OPENSSL
+
 #include <openssl/bio.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
@@ -672,3 +674,10 @@ SKYNET_API int luaopen_crypto(lua_State* L) {
 }
 
 /***********************************************************************************/
+
+#else
+
+SKYNET_API int luaopen_base64(lua_State* L) { return 0; }
+SKYNET_API int luaopen_crypto(lua_State* L) { return 0; }
+
+#endif //STDNET_USE_OPENSSL
