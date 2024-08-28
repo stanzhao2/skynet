@@ -3,6 +3,23 @@
 #include "lua_dofile.h"
 #include "lua_require.h"
 
+static std::mutex _mutex;
+static std::map<int, typeof<io::service>> _services;
+
+class service_hold final {
+public:
+  inline service_hold() {
+    std::unique_lock<std::mutex> _lock(_mutex);
+    auto ios = io::service::local();
+    _services[ios->id()] = ios;
+  }
+  inline ~service_hold() {
+    std::unique_lock<std::mutex> _lock(_mutex);
+    auto ios = io::service::local();
+    _services.erase(ios->id());
+  }
+};
+
 /********************************************************************************/
 
 static const char* normal(const char* filename, char* out) {
@@ -34,6 +51,8 @@ SKYNET_API int skynet_dofile(lua_State* L) {
   lua_pushvalue(L, 1);
   lua_setglobal(L, "progname");
 
+  service_hold hold;
+
   int top = lua_gettop(L);
   lua_getglobal(L, LUA_LOADLIBNAME);  /* package */
   lua_getfield(L, -1, LUA_SEARCHERS);  /* searchers or loaders */
@@ -60,6 +79,12 @@ SKYNET_API int skynet_dofile(lua_State* L) {
     }
   }
   return LUA_OK;
+}
+
+SKYNET_API typeof<io::service> skynet_service(int servicdid) {
+  std::unique_lock<std::mutex> _lock(_mutex);
+  auto iter = _services.find(servicdid);
+  return iter == _services.end() ? typeof<io::service>() : iter->second;
 }
 
 /********************************************************************************/

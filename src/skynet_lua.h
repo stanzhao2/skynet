@@ -8,9 +8,10 @@
 #endif
 
 #include "core/lua_core.h"
-#include "core/lua_pcall.h" /* lua_pcall, lua_xpcall */
-#include "core/lua_wrap.h"  /* lua_wrap, lua_unwrap */
-#include "core/lua_print.h" 
+#include "core/lua_print.h"  /* print, trace, trace   */
+#include "core/lua_pcall.h"  /* lua_pcall, lua_xpcall */
+#include "core/lua_wrap.h"   /* lua_wrap, lua_unwrap  */
+#include "core/lua_dofile.h" /* skynet_service(id)    */
 
 /***********************************************************************************/
 
