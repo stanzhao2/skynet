@@ -43,17 +43,17 @@ static int openlibs(lua_State* L, const lua_CFunction f[]) {
 /********************************************************************************/
 
 struct directory final {
-  ~directory() {
+  inline ~directory() {
     __close(nullptr);
   }
-  int __close(lua_State* L) {
+  inline int __close(lua_State* L) {
     if (!closed) {
       tinydir_close(&tdir);
     }
     closed = true;
     return 0;
   }
-  int __iterator(lua_State* L) {
+  inline int __iterator(lua_State* L) {
     while (!closed && tdir.has_next) {
       tinydir_file file;
       tinydir_readfile(&tdir, &file);
@@ -67,7 +67,7 @@ struct directory final {
     }
     return 0;
   }
-  int __pairs(lua_State* L){
+  inline int __pairs(lua_State* L){
     lua_pushlightuserdata(L, this);
     lua_pushcclosure(L, iterator, 1);
     return 1;
@@ -76,10 +76,10 @@ struct directory final {
   bool closed = false;
 
 public:
-  static const char* name() {
+  inline static const char* name() {
     return "lua folder";
   }
-  static directory* __this(lua_State* L) {
+  inline static directory* __this(lua_State* L) {
     return checkudata<directory>(L, 1, name());
   }
   static void init_metatable(lua_State* L) {
@@ -92,17 +92,17 @@ public:
     newmetatable(L, name(), methods);
     lua_pop(L, 1);
   }
-  static int close(lua_State* L) {
+  inline static int close(lua_State* L) {
     return __this(L)->__close(L);
   }
-  static int __gc(lua_State* L) {
+  inline static int __gc(lua_State* L) {
     __this(L)->~directory();
     return 0;
   }
-  static int pairs(lua_State* L) {
+  inline static int pairs(lua_State* L) {
     return __this(L)->__pairs(L);
   }
-  static int iterator(lua_State* L) {
+  inline static int iterator(lua_State* L) {
     auto self = (directory*)lua_touserdata(L, lua_upvalueindex(1));
     return self->__iterator(L);
   }
