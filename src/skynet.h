@@ -9,6 +9,8 @@
 
 #include "skynet_lua.h"
 
+#define SKYNET_VERSION "1.0.3"
+
 /***********************************************************************************/
 
 SKYNET_API bool is_debugging();

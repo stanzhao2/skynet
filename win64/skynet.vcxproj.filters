@@ -108,6 +108,9 @@
     <ClCompile Include="..\src\core\lua_core.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\core\lua_rpcall.cpp">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\skynet.h">
@@ -177,6 +180,9 @@
       <Filter>源文件\core</Filter>
     </ClInclude>
     <ClInclude Include="..\src\core\lua_socket.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lua_rpcall.h">
       <Filter>源文件\core</Filter>
     </ClInclude>
   </ItemGroup>

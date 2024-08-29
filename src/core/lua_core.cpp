@@ -1,10 +1,12 @@
 
 
+#include "../skynet.h"
 #include "../skynet_lua.h"
 #include "lua_bind.h"
 #include "lua_dofile.h"
 #include "lua_path.h"
 #include "lua_pcall.h"
+#include "lua_rpcall.h"
 #include "lua_pload.h"
 #include "lua_print.h"
 #include "lua_require.h"
@@ -20,6 +22,7 @@ static const lua_CFunction core_modules[] = {
   luaopen_path,         /* path, cpath    */
   luaopen_wrap,         /* wrap, unwrap   */
   luaopen_pcall,        /* pcall, xpcall  */
+  luaopen_rpcall,       /* os.rpcall      */
   luaopen_bind,         /* bind           */
   luaopen_pload,        /* pload          */
   luaopen_timer,        /* os.timer       */
@@ -40,17 +43,17 @@ static int openlibs(lua_State* L, const lua_CFunction f[]) {
 /********************************************************************************/
 
 struct directory final {
-  directory(lua_State* lua)
-    : L(lua) {
+  ~directory() {
+    __close(nullptr);
   }
-  int __close() {
+  int __close(lua_State* L) {
     if (!closed) {
       tinydir_close(&tdir);
     }
     closed = true;
     return 0;
   }
-  int __iterator() {
+  int __iterator(lua_State* L) {
     while (!closed && tdir.has_next) {
       tinydir_file file;
       tinydir_readfile(&tdir, &file);
@@ -64,12 +67,11 @@ struct directory final {
     }
     return 0;
   }
-  int __pairs(){
+  int __pairs(lua_State* L){
     lua_pushlightuserdata(L, this);
     lua_pushcclosure(L, iterator, 1);
     return 1;
   }
-  lua_State* L;
   tinydir_dir tdir;
   bool closed = false;
 
@@ -91,23 +93,23 @@ public:
     lua_pop(L, 1);
   }
   static int close(lua_State* L) {
-    return __this(L)->__close();
+    return __this(L)->__close(L);
   }
   static int __gc(lua_State* L) {
     __this(L)->~directory();
     return 0;
   }
   static int pairs(lua_State* L) {
-    return __this(L)->__pairs();
+    return __this(L)->__pairs(L);
   }
   static int iterator(lua_State* L) {
     auto self = (directory*)lua_touserdata(L, lua_upvalueindex(1));
-    return self->__iterator();
+    return self->__iterator(L);
   }
   static int open(lua_State* L) {
     const char* dir = luaL_optstring(L, 1, "." LUA_DIRSEP);
     std::string path = UTF8(dir);
-    auto self = newuserdata<directory>(L, name(), L);
+    auto self = newuserdata<directory>(L, name());
     if (tinydir_open(&self->tdir, path.c_str()) < 0) {
       lua_pushnil(L);
     }
@@ -190,6 +192,22 @@ static int os_clock(lua_State *L) {
   return 1;
 }
 
+static int os_version(lua_State* L) {
+  lua_pushstring(L, SKYNET_VERSION);
+  return 1;
+}
+
+static int os_dirsep(lua_State* L) {
+  lua_pushstring(L, LUA_DIRSEP);
+  return 1;
+}
+
+static int os_debugging(lua_State* L) {
+  auto debug = is_debugging();
+  lua_pushboolean(L, debug ? 1 : 0);
+  return 1;
+}
+
 static int os_stopped(lua_State* L) {
   auto ios = lua_service();
   lua_pushboolean(L, ios->stopped());
@@ -222,6 +240,7 @@ static int os_stop(lua_State* L) {
 /* force exit from the current process */
 static int os_exit(lua_State* L) {
   main_service->stop();
+  main_service->cancel();
   return 0;
 }
 
@@ -293,7 +312,10 @@ SKYNET_API int luaopen_core(lua_State* L) {
   global::open_library(L);
   directory::open_library(L);
   const luaL_Reg methods[] = {
+    { "version",    os_version    },
     { "clock",      os_clock      },
+    { "dirsep",     os_dirsep     },
+    { "debugging",  os_debugging  },
     { "wait",       os_wait       },
     { "id",         os_id         },
     { "name",       os_name       },

@@ -179,7 +179,7 @@ SKYNET_API int luaopen_pload(lua_State* L) {
     { "pload",      luac_pload    },
     { NULL,         NULL          }
   };
-  lua_getglobal(L, LUA_GNAME);
+  lua_getglobal(L, "os");
   luaL_setfuncs(L, methods, 0);
   lua_pop(L, 1); /* pop 'os' from stack */
   return 0;

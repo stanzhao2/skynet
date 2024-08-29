@@ -22,32 +22,30 @@ static void push_endpoint(lua_State* L, const ip::tcp::endpoint& endpoint) {
 /********************************************************************************/
 
 struct ssl_context final {
-  inline ssl_context(lua_State* lua)
-    : L(lua)
-    , ctx(ssl::context::tlsv12) {
+  inline ssl_context()
+    : ctx(ssl::context::tlsv12) {
   }
-  int use_certificate_chain(const char* data, size_t size) {
+  int use_certificate_chain(lua_State* L, const char* data, size_t size) {
     error_code ec;
     ::use_certificate_chain(ctx, data, size, ec);
     lua_pushboolean(L, ec ? 0 : 1);
     if (ec) push_errcode(L, ec);
     return ec ? 2 : 1;
   }
-  int use_private_key(const char* data, size_t size) {
+  int use_private_key(lua_State* L, const char* data, size_t size) {
     error_code ec;
     ::use_private_key(ctx, data, size, ec);
     lua_pushboolean(L, ec ? 0 : 1);
     if (ec) push_errcode(L, ec);
     return ec ? 2 : 1;
   }
-  int use_private_key_pwd(const char* pwd) {
+  int use_private_key_pwd(lua_State* L, const char* pwd) {
     error_code ec;
     ::use_private_key_pwd(ctx, pwd, ec);
     lua_pushboolean(L, ec ? 0 : 1);
     if (ec) push_errcode(L, ec);
     return ec ? 2 : 1;
   }
-  lua_State* L;
   ssl::context ctx;
 
 public:
@@ -70,19 +68,19 @@ public:
   inline static int certificate(lua_State* L) {
     size_t size;
     const char* data = luaL_checklstring(L, 1, &size);
-    return __this(L)->use_certificate_chain(data, size);
+    return __this(L)->use_certificate_chain(L, data, size);
   }
   inline static int key(lua_State* L) {
     size_t size;
     const char* data = luaL_checklstring(L, 1, &size);
-    return __this(L)->use_private_key(data, size);
+    return __this(L)->use_private_key(L, data, size);
   }
   inline static int password(lua_State* L) {
     const char* data = luaL_checkstring(L, 1);
-    return __this(L)->use_private_key_pwd(data);
+    return __this(L)->use_private_key_pwd(L, data);
   }
   static int create(lua_State* L) {
-    auto self = newuserdata<ssl_context>(L, name(), L);
+    auto self = newuserdata<ssl_context>(L, name());
     if (!self) {
       lua_pushnil(L);
       lua_pushstring(L, "no memory");
@@ -136,43 +134,47 @@ inline typeof<Ty> ref_new_object(lua_State* L) {
 /********************************************************************************/
 
 struct lua_socket final {
-  inline lua_socket(lua_State* lua)
-    : L(lua) {
-  }
+  inline lua_socket() { }
+
   inline ~lua_socket() {
-    __close();
+    __close(nullptr);
   }
-  inline int __close() {
+  inline int __close(lua_State* L) {
     if (socket) socket->close();
     return 0;
   }
-  int __getid() {
+  int __getid(lua_State* L) {
     lua_pushinteger(L, socket->id());
     return 1;
   }
-  int __set_uri() {
+  int __set_uri(lua_State* L) {
     const char* uri = luaL_checkstring(L, 2);
     socket->request_header().uri.assign(uri);
     return 0;
   }
-  int __get_uri() {
+  int __get_uri(lua_State* L) {
     auto uri = socket->request_header().uri;
     lua_pushlstring(L, uri.c_str(), (lua_Integer)uri.size());
     return 1;
   }
-  int __set_header() {
+  int __set_header(lua_State* L) {
     const char* name  = luaL_checkstring(L, 2);
     const char* value = luaL_checkstring(L, 3);
     socket->request_header().set_header(name, value);
     return 0;
   }
-  int __get_header() {
+  int __get_header(lua_State* L) {
     const char* name = luaL_checkstring(L, 2);
     auto value = socket->request_header().get_header(name);
-    lua_pushlstring(L, value.c_str(), (lua_Integer)value.size());
+    if (value.empty()) {
+      lua_pushnil(L);
+    }
+    else {
+      lua_pushlstring(L, value.c_str(), (lua_Integer)value.size());
+    }
     return 1;
   }
-  int __connect() {
+  int __connect(lua_State* L) {
     const char* host = luaL_checkstring(L, 2);
     unsigned short port = (unsigned short)luaL_checkinteger(L, 3);
     if (lua_isnone(L, 4)) {
@@ -199,7 +201,7 @@ struct lua_socket final {
     );
     return 0;
   }
-  int __remote_endpoint() {
+  int __remote_endpoint(lua_State* L) {
     error_code ec;
     auto ep = socket->remote_endpoint(ec);
     if (ec) {
@@ -210,7 +212,7 @@ struct lua_socket final {
     push_endpoint(L, ep);
     return 1;
   }
-  int __local_endpoint() {
+  int __local_endpoint(lua_State* L) {
     error_code ec;
     auto ep = socket->local_endpoint(ec);
     if (ec) {
@@ -221,19 +223,19 @@ struct lua_socket final {
     push_endpoint(L, ep);
     return 1;
   }
-  int __endpoint() {
+  int __endpoint(lua_State* L) {
     const std::string what = luaL_optstring(L, 2, "remote");
     if (what == "local") {
-      return __local_endpoint();
+      return __local_endpoint(L);
     }
     if (what == "remote") {
-      return __remote_endpoint();
+      return __remote_endpoint(L);
     }
     lua_pushnil(L);
     lua_pushstring(L, "unknown type");
     return 2;
   }
-  int __receive() {
+  int __receive(lua_State* L) {
     if (lua_isnone(L, 2)) {
       error_code ec;
       std::string out;
@@ -271,7 +273,8 @@ struct lua_socket final {
     );
     return 0;
   }
-  int __send() {
+  int __send(lua_State* L) {
+    auto name = lua_typename(L, lua_type(L, 2));
     size_t size = 0;
     const char* data = luaL_checklstring(L, 2, &size);
     if (lua_isnone(L, 3)) {
@@ -302,7 +305,6 @@ struct lua_socket final {
     );
     return 0;
   }
-  lua_State* L;
   typeof<io::socket> socket;
 
 public:
@@ -335,37 +337,37 @@ public:
     lua_pop(L, 1);
   }
   inline static int getid(lua_State* L) {
-    return __this(L)->__getid();
+    return __this(L)->__getid(L);
   }
   inline static int connect(lua_State* L) {
-    return __this(L)->__connect();
+    return __this(L)->__connect(L);
   }
   inline static int set_uri(lua_State* L) {
-    return __this(L)->__set_uri();
+    return __this(L)->__set_uri(L);
   }
   inline static int set_header(lua_State* L) {
-    return __this(L)->__set_header();
+    return __this(L)->__set_header(L);
   }
   inline static int get_uri(lua_State* L) {
-    return __this(L)->__get_uri();
+    return __this(L)->__get_uri(L);
   }
   inline static int get_header(lua_State* L) {
-    return __this(L)->__get_header();
+    return __this(L)->__get_header(L);
   }
   inline static int close(lua_State* L) {
-    return __this(L)->__close();
+    return __this(L)->__close(L);
   }
   inline static int endpoint(lua_State* L) {
-    return __this(L)->__endpoint();
+    return __this(L)->__endpoint(L);
   }
   inline static int send(lua_State* L) {
-    return __this(L)->__send();
+    return __this(L)->__send(L);
   }
   inline static int receive(lua_State* L) {
-    return __this(L)->__receive();
+    return __this(L)->__receive(L);
   }
   static int create(lua_State* L) {
-    auto self = newuserdata<lua_socket>(L, name(), L);
+    auto self = newuserdata<lua_socket>(L, name());
     if (!self) {
       lua_pushnil(L);
       lua_pushstring(L, "no memory");
@@ -395,21 +397,20 @@ public:
 /********************************************************************************/
 
 struct lua_acceptor final {
-  inline lua_acceptor(lua_State* lua)
-    : L(lua) {
-  }
+  inline lua_acceptor() {}
+
   inline ~lua_acceptor() {
-    __close();
+    __close(nullptr);
   }
-  inline int __close() {
+  inline int __close(lua_State* L) {
     if (server) server->close();
     return 0;
   }
-  inline int __getid() {
+  inline int __getid(lua_State* L) {
     lua_pushinteger(L, server->native_handle()->id());
     return 1;
   }
-  int __endpoint() {
+  int __endpoint(lua_State* L) {
     error_code ec;
     auto acceptor = server->native_handle();
     auto local = acceptor->local_endpoint(ec);
@@ -421,7 +422,7 @@ struct lua_acceptor final {
     push_endpoint(L, local);
     return 1;
   }
-  int __listen() {
+  int __listen(lua_State* L) {
     const char* host = luaL_checkstring(L, 2);
     unsigned short port = (unsigned short)luaL_checkinteger(L, 3);
     int handler = lua_ref(L, 4);
@@ -439,7 +440,7 @@ struct lua_acceptor final {
           unref.cancel();
         }
         lua_pushref(L, handler);
-        auto self = newuserdata<lua_socket>(L, lua_socket::name(), L);
+        auto self = newuserdata<lua_socket>(L, lua_socket::name());
         if (self) {
           self->socket = peer;
         }
@@ -456,7 +457,6 @@ struct lua_acceptor final {
     if (ec) push_errcode(L, ec);
     return ec ? 2 : 1;
   }
-  lua_State* L;
   typeof<io_socket_server> server;
 
 public:
@@ -483,19 +483,19 @@ public:
     lua_pop(L, 1);
   }
   inline static int close(lua_State* L) {
-    return __this(L)->__close();
+    return __this(L)->__close(L);
   }
   inline static int getid(lua_State* L) {
-    return __this(L)->__getid();
+    return __this(L)->__getid(L);
   }
   inline static int listen(lua_State* L) {
-    return __this(L)->__listen();
+    return __this(L)->__listen(L);
   }
   inline static int endpoint(lua_State* L) {
-    return __this(L)->__endpoint();
+    return __this(L)->__endpoint(L);
   }
   static int create(lua_State* L) {
-    auto self = newuserdata<lua_acceptor>(L, name(), L);
+    auto self = newuserdata<lua_acceptor>(L, name());
     if (!self) {
       lua_pushnil(L);
       lua_pushstring(L, "no memory");

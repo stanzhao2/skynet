@@ -5,29 +5,28 @@
 /********************************************************************************/
 
 struct class_list final {
-  inline class_list(lua_State* lua)
-    : iter(data.end())
-    , L(lua) {
+  inline class_list()
+    : iter(data.end()) {
   }
   inline ~class_list() {
-    __clear();
+    __clear(nullptr);
   }
-  int __clear() {
+  int __clear(lua_State* L) {
     for (auto iter = data.begin(); iter != data.end(); ++iter) {
       lua_unref(L, *iter);
     }
     data.clear();
     return 0;
   }
-  int __size() {
+  int __size(lua_State* L) {
     lua_pushinteger(L, (lua_Integer)data.size());
     return 1;
   }
-  int __empty() {
+  int __empty(lua_State* L) {
     lua_pushboolean(L, data.empty() ? 1 : 0);
     return 1;
   }
-  int __erase() {
+  int __erase(lua_State* L) {
     if (iter != data.end()) {
       auto i = --iter;
       lua_unref(L, *i);
@@ -40,11 +39,11 @@ struct class_list final {
     }
     return 0;
   }
-  int __reverse() {
+  int __reverse(lua_State* L) {
     data.reverse();
     return 0;
   }
-  int __front() {
+  int __front(lua_State* L) {
     if (data.empty()) {
       lua_pushnil(L);
     }
@@ -53,7 +52,7 @@ struct class_list final {
     }
     return 1;
   }
-  int __back() {
+  int __back(lua_State* L) {
     if (data.empty()) {
       lua_pushnil(L);
     }
@@ -62,7 +61,7 @@ struct class_list final {
     }
     return 1;
   }
-  int __pop_front() {
+  int __pop_front(lua_State* L) {
     if (!data.empty()) {
       int front = data.front();
       data.pop_front();
@@ -70,7 +69,7 @@ struct class_list final {
     }
     return 0;
   }
-  int __pop_back(){
+  int __pop_back(lua_State* L){
     if (!data.empty()) {
       if (iter != data.end()) {
         --iter;
@@ -87,30 +86,29 @@ struct class_list final {
     }
     return 0;
   }
-  int __push_front(){
+  int __push_front(lua_State* L){
     luaL_checkany(L, 2);
     data.push_front(lua_ref(L, 2));
     return 0;
   }
-  int __push_back(){
+  int __push_back(lua_State* L){
     luaL_checkany(L, 2);
     data.push_back(lua_ref(L, 2));
     return 0;
   }
-  int __iterator(){
+  int __iterator(lua_State* L){
     if (iter == data.end()) {
       return 0;
     }
     lua_pushref(L, *(iter++));
     return 1;
   }
-  int __pairs() {
+  int __pairs(lua_State* L) {
     iter = data.begin();
     lua_pushlightuserdata(L, this);
     lua_pushcclosure(L, iterator, 1);
     return 1;
   }
-  lua_State* L;
   std::list<int> data;
   std::list<int>::iterator iter;
 
@@ -143,51 +141,51 @@ public:
     lua_pop(L, 1);
   }
   static int clear(lua_State* L) {
-    return __this(L)->__clear();
+    return __this(L)->__clear(L);
   }
   static int __gc(lua_State* L) {
     __this(L)->~class_list();
     return 0;
   }
   static int size(lua_State* L) {
-    return __this(L)->__size();
+    return __this(L)->__size(L);
   }
   static int empty(lua_State* L) {
-    return __this(L)->__empty();
+    return __this(L)->__empty(L);
   }
   static int erase(lua_State* L) {
-    return __this(L)->__erase();
+    return __this(L)->__erase(L);
   }
   static int reverse(lua_State* L) {
-    return __this(L)->__reverse();
+    return __this(L)->__reverse(L);
   }
   static int front(lua_State* L) {
-    return __this(L)->__front();
+    return __this(L)->__front(L);
   }
   static int back(lua_State* L) {
-    return __this(L)->__back();
+    return __this(L)->__back(L);
   }
   static int pop_front(lua_State* L) {
-    return __this(L)->__pop_front();
+    return __this(L)->__pop_front(L);
   }
   static int pop_back(lua_State* L) {
-    return __this(L)->__pop_back();
+    return __this(L)->__pop_back(L);
   }
   static int push_front(lua_State* L) {
-    return __this(L)->__push_front();
+    return __this(L)->__push_front(L);
   }
   static int push_back(lua_State* L) {
-    return __this(L)->__push_back();
+    return __this(L)->__push_back(L);
   }
   static int iterator(lua_State* L) {
     auto self = (class_list*)lua_touserdata(L, lua_upvalueindex(1));
-    return self->__iterator();
+    return self->__iterator(L);
   }
   static int pairs(lua_State* L) {
-    return __this(L)->__pairs();
+    return __this(L)->__pairs(L);
   }
   static int create(lua_State* L) {
-    auto self = newuserdata<class_list>(L, name(), L);
+    auto self = newuserdata<class_list>(L, name());
     if (!self) {
       lua_pushnil(L);
       lua_pushstring(L, "no memory");

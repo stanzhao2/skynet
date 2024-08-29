@@ -5,24 +5,23 @@
 /********************************************************************************/
 
 struct class_timer final {
-  inline class_timer(lua_State* lua)
-    : timer(*lua_service())
-    , L(lua) {
+  inline class_timer()
+    : _timer(*lua_service()) {
   }
-  int __expires() {
+  int __expires(lua_State* L) {
     size_t timeout = luaL_checkinteger(L, 2);
     luaL_checktype(L, 3, LUA_TFUNCTION);
-    return __expires(timeout, lua_ref(L, 3));
+    return __expires(L, timeout, lua_ref(L, 3));
   }
-  int __cancel() {
-    timer.cancel();
+  int __cancel(lua_State* L) {
+    _timer.cancel();
     return 0;
   }
-  int __expires(size_t timeout, int handler) {
-    timer.expires_after(
+  int __expires(lua_State* L, size_t timeout, int handler) {
+    _timer.expires_after(
       std::chrono::milliseconds(timeout)
     );
-    timer.async_wait([=](const error_code& ec) {
+    _timer.async_wait([=](const error_code& ec) {
       lua_auto_revert revert(L);
       lua_auto_unref  unref(L, handler);
       if (ec) {
@@ -39,12 +38,12 @@ struct class_timer final {
         }
       }
       unref.cancel();
-      __expires(timeout, handler);
+      __expires(L, timeout, handler);
     });
     return 0;
   }
-  lua_State* L;
-  steady_timer timer;
+  std::string  _name;
+  steady_timer _timer;
 
 public:
   static const char* name() {
@@ -68,24 +67,25 @@ public:
     return 0;
   }
   static int expires(lua_State* L) {
-    return __this(L)->__expires();
+    return __this(L)->__expires(L);
   }
   static int cancel(lua_State* L) {
-    return __this(L)->__cancel();
+    return __this(L)->__cancel(L);
   }
   static int create(lua_State* L) {
-    auto self = newuserdata<class_timer>(L, name(), L);
+    auto self = newuserdata<class_timer>(L, name());
     if (!self) {
       lua_pushnil(L);
       lua_pushstring(L, "no memory");
       return 2;
     }
+    self->_name = luaL_optstring(L, 1, "no name");
     return 1;
   }
   static int open_library(lua_State* L) {
     init_metatable(L);
     const luaL_Reg methods[] = {
-      { "timer",  create   }, /* os.timer() */
+      { "_timer",  create   }, /* os._timer() */
       { NULL,     NULL     }
     };
     lua_getglobal(L, "os");

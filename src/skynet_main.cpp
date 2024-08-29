@@ -71,6 +71,7 @@ SKYNET_API void skynet_main(lua_State* L, int argc, const char* argv[]) {
   local->signal().async_wait(
     [local](const error_code& ec, int code) {
       local->stop();
+      local->cancel();
     }
   );
   lua_pushcfunction(L, pmain);
