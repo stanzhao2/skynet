@@ -8,16 +8,7 @@ struct class_timer final {
   inline class_timer()
     : _timer(*lua_service()) {
   }
-  int __expires(lua_State* L) {
-    size_t timeout = luaL_checkinteger(L, 2);
-    luaL_checktype(L, 3, LUA_TFUNCTION);
-    return __expires(L, timeout, lua_ref(L, 3));
-  }
-  int __cancel(lua_State* L) {
-    _timer.cancel();
-    return 0;
-  }
-  int __expires(lua_State* L, size_t timeout, int handler) {
+  int on_timer(lua_State* L, size_t timeout, int handler) {
     _timer.expires_after(
       std::chrono::milliseconds(timeout)
     );
@@ -38,7 +29,7 @@ struct class_timer final {
         }
       }
       unref.cancel();
-      __expires(L, timeout, handler);
+      on_timer(L, timeout, handler);
     });
     return 0;
   }
@@ -46,11 +37,26 @@ struct class_timer final {
   steady_timer _timer;
 
 public:
-  static const char* name() {
+  inline static const char* name() {
     return "lua timer";
   }
-  static class_timer* __this(lua_State* L) {
+  inline static class_timer* __this(lua_State* L) {
     return checkudata<class_timer>(L, 1, name());
+  }
+  inline static int __gc(lua_State* L) {
+    __this(L)->~class_timer();
+    return 0;
+  }
+  static int expires(lua_State* L) {
+    auto self = __this(L);
+    size_t timeout = luaL_checkinteger(L, 2);
+    luaL_checktype(L, 3, LUA_TFUNCTION);
+    return self->on_timer(L, timeout, lua_ref(L, 3));
+  }
+  static int cancel(lua_State* L) {
+    auto self = __this(L);
+    self->_timer.cancel();
+    return 0;
   }
   static void init_metatable(lua_State* L) {
     const luaL_Reg methods[] = {
@@ -61,16 +67,6 @@ public:
     };
     newmetatable(L, name(), methods);
     lua_pop(L, 1);
-  }
-  static int __gc(lua_State* L) {
-    __this(L)->~class_timer();
-    return 0;
-  }
-  static int expires(lua_State* L) {
-    return __this(L)->__expires(L);
-  }
-  static int cancel(lua_State* L) {
-    return __this(L)->__cancel(L);
   }
   static int create(lua_State* L) {
     auto self = newuserdata<class_timer>(L, name());
@@ -90,7 +86,7 @@ public:
     };
     lua_getglobal(L, "os");
     luaL_setfuncs(L, methods, 0);
-    lua_pop(L, 1); /* pop '_G' from stack */
+    lua_pop(L, 1); /* pop 'os' from stack */
     return 0;
   }
 };
