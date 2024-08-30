@@ -478,13 +478,7 @@ static int luac_rpcall(lua_State* L) {
   /* not in coroutine */
   std::string rpcall_ret;
   executor->set_context(&rpcall_ret);
-  bool result = true;
-  if (is_debugging()) {
-    executor->wait();
-  }
-  else {
-    result = executor->wait_for(max_expires);
-  }
+  bool result = executor->wait_for(max_expires);
   executor->set_context(nullptr);
 
   invoke_pendings.erase(sn);
@@ -634,9 +628,7 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
   if (!watcher_ios) {
     watcher_ios = lua_service()->id();
   }
-  if (!is_debugging()) {
-    check_timeout();
-  }
+  check_timeout();
   return 0;
 }
 
