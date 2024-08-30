@@ -19,7 +19,7 @@ static const char* parse_progname(const char* filename) {
 /***********************************************************************************/
 
 SKYNET_API bool is_debugging() {
-#ifdef STDNET_DEBUG
+#if defined(STDNET_DEBUG) || defined(_MSC_VER)
   return true;
 #else
   return false;
