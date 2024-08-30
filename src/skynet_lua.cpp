@@ -5,6 +5,7 @@
 
 /* open lua libs */
 #include "core/lua_core.h"
+#include "extend/lua_compile.h"
 #include "extend/lua_json.h"
 #include "extend/lua_list.h"
 #include "extend/lua_deflate.h"
@@ -17,6 +18,7 @@
 
 static const lua_CFunction skynet_modules[] = {
   luaopen_core,         /* os.wait ...    */
+  luaopen_compile,      /* os.compile     */
   luaopen_json,         /* json.encode... */
   luaopen_list,         /* list */
   luaopen_http,         /*  */
