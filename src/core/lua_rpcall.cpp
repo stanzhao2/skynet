@@ -101,6 +101,34 @@ static void cancel_invoke(int rcf) {
   }
 }
 
+static int check_timeout() {
+  static thread_local steady_timer _timer(*lua_service());
+  auto now  = steady_clock();
+  auto iter = invoke_pendings.begin();
+  for (; iter != invoke_pendings.end();) {
+    auto timeout = iter->second.timeout;
+    if (now < timeout) {
+      ++iter;
+      continue;
+    }
+    auto rcf = iter->second.rcf;
+    auto caller = iter->second.caller;
+    iter = invoke_pendings.erase(iter);
+
+    auto executor = find_service(caller);
+    if (executor) {
+      executor->post(_bind(cancel_invoke, rcf));
+    }
+  }
+  _timer.expires_after(std::chrono::milliseconds(1000));
+  _timer.async_wait(
+    [](const error_code& ec) {
+      if (!ec) check_timeout();
+    }
+  );
+  return LUA_OK;
+}
+
 /* calling the caller callback function */
 static void back_to_local(const std::string& data, int rcf, size_t sn) {
   lua_State* L = lua_local();
@@ -545,38 +573,10 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
   return 0;
 }
 
-SKYNET_API int lua_lookout(lua_CFunction f) {
+SKYNET_API int lua_l_lookout(lua_CFunction f) {
   unique_mutex_lock(_mutex);
   watcher_ios = lua_service()->id();
   watcher_cfn = f;
-  return LUA_OK;
-}
-
-SKYNET_API int check_timeout() {
-  static thread_local steady_timer _timer(*lua_service());
-  auto now  = steady_clock();
-  auto iter = invoke_pendings.begin();
-  for (; iter != invoke_pendings.end();) {
-    auto timeout = iter->second.timeout;
-    if (now < timeout) {
-      ++iter;
-      continue;
-    }
-    auto rcf = iter->second.rcf;
-    auto caller = iter->second.caller;
-    iter = invoke_pendings.erase(iter);
-
-    auto executor = find_service(caller);
-    if (executor) {
-      executor->post(_bind(cancel_invoke, rcf));
-    }
-  }
-  _timer.expires_after(std::chrono::milliseconds(1000));
-  _timer.async_wait(
-    [](const error_code& ec) {
-      if (!ec) check_timeout();
-    }
-  );
   return LUA_OK;
 }
 

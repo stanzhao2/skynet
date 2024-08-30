@@ -43,21 +43,39 @@ static int openlibs(lua_State* L, const lua_CFunction f[]) {
 /********************************************************************************/
 
 struct directory final {
-  inline ~directory() {
-    __close(nullptr);
+  inline static const char* name() {
+    return "lua folder";
   }
-  inline int __close(lua_State* L) {
-    if (!closed) {
-      tinydir_close(&tdir);
-    }
-    closed = true;
+  inline static directory* __this(lua_State* L) {
+    return checkudata<directory>(L, 1, name());
+  }
+  static int __gc(lua_State* L) {
+    __this(L)->~directory();
     return 0;
   }
-  inline int __iterator(lua_State* L) {
-    while (!closed && tdir.has_next) {
+  static int close(lua_State* L) {
+    auto self = __this(L);
+    if (!self->closed) {
+      tinydir_close(&self->tdir);
+    }
+    self->closed = true;
+    return 0;
+  }
+  inline static int pairs(lua_State* L) {
+    auto self = __this(L);
+    lua_pushlightuserdata(L, self);
+    lua_pushcclosure(L, iterator, 1);
+    return 1;
+  }
+  inline static int iterator(lua_State* L) {
+    auto self = (directory*)lua_touserdata(L, lua_upvalueindex(1));
+    while (!self->closed) {
+      if (!self->tdir.has_next) {
+        break;
+      }
       tinydir_file file;
-      tinydir_readfile(&tdir, &file);
-      tinydir_next(&tdir);
+      tinydir_readfile(&self->tdir, &file);
+      tinydir_next(&self->tdir);
       auto filename = UTF8(file.name);
       if (filename != "." && filename != "..") {
         lua_pushlstring(L, filename.c_str(), filename.size());
@@ -67,20 +85,14 @@ struct directory final {
     }
     return 0;
   }
-  inline int __pairs(lua_State* L){
-    lua_pushlightuserdata(L, this);
-    lua_pushcclosure(L, iterator, 1);
+  static int open(lua_State* L) {
+    const char* dir = luaL_optstring(L, 1, "." LUA_DIRSEP);
+    std::string path = UTF8(dir);
+    auto self = newuserdata<directory>(L, name());
+    if (tinydir_open(&self->tdir, path.c_str()) < 0) {
+      lua_pushnil(L);
+    }
     return 1;
-  }
-  tinydir_dir tdir;
-  bool closed = false;
-
-public:
-  inline static const char* name() {
-    return "lua folder";
-  }
-  inline static directory* __this(lua_State* L) {
-    return checkudata<directory>(L, 1, name());
   }
   static void init_metatable(lua_State* L) {
     const luaL_Reg methods[] = {
@@ -91,29 +103,6 @@ public:
     };
     newmetatable(L, name(), methods);
     lua_pop(L, 1);
-  }
-  inline static int close(lua_State* L) {
-    return __this(L)->__close(L);
-  }
-  inline static int __gc(lua_State* L) {
-    __this(L)->~directory();
-    return 0;
-  }
-  inline static int pairs(lua_State* L) {
-    return __this(L)->__pairs(L);
-  }
-  inline static int iterator(lua_State* L) {
-    auto self = (directory*)lua_touserdata(L, lua_upvalueindex(1));
-    return self->__iterator(L);
-  }
-  static int open(lua_State* L) {
-    const char* dir = luaL_optstring(L, 1, "." LUA_DIRSEP);
-    std::string path = UTF8(dir);
-    auto self = newuserdata<directory>(L, name());
-    if (tinydir_open(&self->tdir, path.c_str()) < 0) {
-      lua_pushnil(L);
-    }
-    return 1;
   }
   static int make(lua_State* L) {
     const char* name = luaL_checkstring(L, 1);
@@ -133,6 +122,8 @@ public:
     lua_pop(L, 1); /* pop 'os' from stack */
     return 0;
   }
+  tinydir_dir tdir;
+  bool closed = false;
 };
 
 /********************************************************************************/
