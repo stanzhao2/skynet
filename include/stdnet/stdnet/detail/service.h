@@ -82,8 +82,9 @@ namespace detail {
 
   ASIO_DECL void service::wait() {
     while (!stopped()) {
-      run_one_for(std::chrono::milliseconds(10));
+      run_one();
       if (_semaphore.wait_for(0)) {
+        _semaphore.clear();
         break;
       }
     }
@@ -96,8 +97,9 @@ namespace detail {
       if (now - begin >= expires) {
         break;
       }
-      run_one_for(std::chrono::milliseconds(10));
+      run_one_for(std::chrono::milliseconds(expires));
       if (_semaphore.wait_for(0)) {
+        _semaphore.clear();
         return true;
       }
     }

@@ -36,6 +36,13 @@ CONF_API void cv_wait(condition& ref) {
   }
 }
 
+CONF_API void cv_clear(condition& ref) {
+  std::unique_lock<std::mutex> unique(ref.mt);
+  if (ref.counter > 0) {
+    ref.counter = 0;
+  }
+}
+
 CONF_API bool cv_wait_for(condition& ref, size_t expires) {
   std::unique_lock<std::mutex> unique(ref.mt);
   if ((--ref.counter) >= 0) {
@@ -63,6 +70,9 @@ public:
   }
   inline void wait() {
     cv_wait(cond);
+  }
+  inline void clear() {
+    cv_clear(cond);
   }
   inline bool wait_for(size_t expires) {
     return cv_wait_for(cond, expires);

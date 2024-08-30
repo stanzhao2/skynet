@@ -19,6 +19,7 @@ typedef struct __node_type {
 
 struct pend_invoke {
   int caller;
+  int rcf;
   size_t timeout;
 };
 
@@ -33,7 +34,7 @@ typedef std::map<
 > rpcall_map_type;
 
 typedef std::map<
-  int, pend_invoke
+  size_t, pend_invoke
 > invoke_map_type;
 
 #define max_expires  10000
@@ -46,10 +47,15 @@ static int watcher_luaf = 0;
 static lua_CFunction   watcher_cfn = nullptr;
 static rpcall_map_type rpcall_handlers;
 
+static thread_local size_t rpcall_nextid = 0;
 static thread_local size_t rpcall_caller = 0;
 static thread_local invoke_map_type invoke_pendings;
 
 /********************************************************************************/
+
+static inline size_t next_sn() {
+  return ++rpcall_nextid;
+}
 
 static int watch_handler(lua_State* L) {
   if (watcher_cfn != nullptr) {
@@ -96,14 +102,15 @@ static void cancel_invoke(int rcf) {
 }
 
 /* calling the caller callback function */
-static void back_to_local(const std::string& data, int rcf) {
+static void back_to_local(const std::string& data, int rcf, size_t sn) {
   lua_State* L = lua_local();
   lua_auto_revert revert(L);
   lua_auto_unref  unref_rcf(L, rcf);
-  auto iter = invoke_pendings.find(rcf);
+  auto iter = invoke_pendings.find(sn);
   if (iter == invoke_pendings.end()) {
     return;
   }
+  invoke_pendings.erase(iter);
   int type = lua_pushref(L, rcf);
   if (type == LUA_TTHREAD) {
     auto coL = lua_tothread(L, -1);
@@ -125,7 +132,7 @@ static void back_to_local(const std::string& data, int rcf) {
 }
 
 /* back to response of request */
-static void forword(const std::string& data, size_t caller, int rcf) {
+static void forword(const std::string& data, size_t caller, int rcf, size_t sn) {
   auto executor = find_service(watcher_ios);
   if (executor) {
     executor->post(
@@ -142,6 +149,8 @@ static void forword(const std::string& data, size_t caller, int rcf) {
         lua_setfield(L, -2, "caller");
         lua_pushinteger(L, (lua_Integer)rcf);
         lua_setfield(L, -2, "rcf");
+        lua_pushinteger(L, (lua_Integer)sn);
+        lua_setfield(L, -2, "sn");
         if (lua_pcall(L, 1, 0) != LUA_OK) {
           lua_ferror("%s\n", lua_tostring(L, -1));
         }
@@ -155,7 +164,7 @@ static void forword(const std::string& data, size_t caller, int rcf) {
 ** who: receiver
 ** rcf: callback function reference for the caller
 */
-static int forword(const topic_type& topic, const char* data, size_t size, size_t mask, size_t who, size_t caller, int rcf) {
+static int forword(const topic_type& topic, const char* data, size_t size, size_t mask, size_t who, size_t caller, int rcf, size_t sn) {
   std::string argv;
   if (data && size) {
     argv.assign(data, size);
@@ -182,6 +191,8 @@ static int forword(const topic_type& topic, const char* data, size_t size, size_
         lua_setfield(L, -2, "caller");
         lua_pushinteger(L, (lua_Integer)rcf);
         lua_setfield(L, -2, "rcf");
+        lua_pushinteger(L, (lua_Integer)sn);
+        lua_setfield(L, -2, "sn");
         if (lua_pcall(L, 1, 0) != LUA_OK) {
           lua_ferror("%s\n", lua_tostring(L, -1));
         }
@@ -223,10 +234,10 @@ static int dispatch(const topic_type& topic, const std::string& what, int rcb, s
 ** who: receiver
 ** rcf: callback function reference for the caller
 */
-static int dispatch(const topic_type& topic, int rcb, const char* data, size_t size, size_t mask, size_t who, size_t caller, int rcf) {
+static int dispatch(const topic_type& topic, int rcb, const char* data, size_t size, size_t mask, size_t who, size_t caller, int rcf, size_t sn) {
   /* who is receiver */
   if (!is_local(who)) {
-    return forword(topic, data, size, mask, who, caller, rcf);
+    return forword(topic, data, size, mask, who, caller, rcf, sn);
   }
   std::string argv;
   if (data && size) {
@@ -272,10 +283,10 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
       const char* result = luaL_checklstring(L, -1, &nsize);
       std::string temp(result, nsize);
       if (is_local(caller)) {
-        lua_r_response(temp, caller, rcf);
+        lua_r_response(temp, caller, rcf, sn);
         return;
       }
-      forword(temp, caller, rcf);
+      forword(temp, caller, rcf, sn);
     }
   );
   return 1;
@@ -302,7 +313,7 @@ static int luac_deliver(lua_State* L) {
     data = luaL_checklstring(L, -1, &size);
   }
   int caller = lua_service()->id();
-  int count  = lua_r_deliver(name, data, size, mask, who, caller, 0);
+  int count  = lua_r_deliver(name, data, size, mask, who, caller, 0, next_sn());
   lua_pushinteger(L, count);
   return 1;
 }
@@ -319,13 +330,15 @@ static int luac_invoke(lua_State* L) {
     lua_wrap(L, argc);
     data = luaL_checklstring(L, -1, &size);
   }
+  auto sn = next_sn();
   auto caller = lua_service()->id();
-  int count = lua_r_deliver(name, data, size, rand(), 0, caller, rcf);
+  int count = lua_r_deliver(name, data, size, rand(), 0, caller, rcf, sn);
   if (count > 0) {
     pend_invoke pend;
     pend.caller  = caller;
+    pend.rcf     = rcf;
     pend.timeout = steady_clock() + max_expires;
-    invoke_pendings[rcf] = pend;
+    invoke_pendings[sn] = pend;
   }
   else {
     lua_unref(L, rcf);
@@ -356,8 +369,9 @@ static int luac_rpcall(lua_State* L) {
     lua_wrap(L, argc);
     data = luaL_checklstring(L, -1, &size);
   }
+  auto sn = next_sn();
   int caller = executor->id();
-  int count  = lua_r_deliver(name, data, size, rand(), 0, caller, rcf);
+  int count  = lua_r_deliver(name, data, size, rand(), 0, caller, rcf, sn);
   if (count == 0) {
     if (rcf > 0) {
       lua_unref(L, rcf);
@@ -366,12 +380,13 @@ static int luac_rpcall(lua_State* L) {
     lua_pushfstring(L, "%s not found", name);
     return 2;
   }
+  pend_invoke pend;
+  pend.caller  = caller;
+  pend.rcf     = rcf;
+  pend.timeout = steady_clock() + max_expires;
+  invoke_pendings[sn] = pend;
   /* in coroutine */
   if (rcf > 0) {
-    pend_invoke pend;
-    pend.caller  = caller;
-    pend.timeout = steady_clock() + max_expires;
-    invoke_pendings[rcf] = pend;
     return lua_yieldk(L, 0, 0, 0);
   }
   /* not in coroutine */
@@ -380,6 +395,7 @@ static int luac_rpcall(lua_State* L) {
   bool result = executor->wait_for(max_expires);
   executor->set_context(nullptr);
 
+  invoke_pendings.erase(sn);
   if (executor->stopped()) {
     lua_pushboolean(L, 0); /* false */
     lua_pushstring(L, "cancel");
@@ -474,8 +490,9 @@ static int luac_r_response(lua_State* L) {
     luaL_error(L, "#2 out of range: %d", caller);
   }
   int rcf = (int)luaL_checkinteger(L, 3);
+  size_t sn = luaL_checkinteger(L, 4);
   std::string argv(data, size);
-  int result = lua_r_response(argv, caller, rcf);
+  int result = lua_r_response(argv, caller, rcf, sn);
   lua_pushboolean(L, result == LUA_OK ? 1 : 0);
   return 1;
 }
@@ -494,7 +511,8 @@ static int luac_r_deliver(lua_State* L) {
     luaL_error(L, "#5 out of range: %d", caller);
   }
   int rcf = (int)luaL_checkinteger(L, 6);
-  int count = lua_r_deliver(name, data, size, mask, who, caller, rcf);
+  size_t sn = luaL_checkinteger(L, 7);
+  int count = lua_r_deliver(name, data, size, mask, who, caller, rcf, sn);
   lua_pushinteger(L, count);
   return 1;
 }
@@ -544,7 +562,7 @@ SKYNET_API int check_timeout() {
       ++iter;
       continue;
     }
-    auto rcf = iter->first;
+    auto rcf = iter->second.rcf;
     auto caller = iter->second.caller;
     iter = invoke_pendings.erase(iter);
 
@@ -613,23 +631,36 @@ SKYNET_API int lua_r_bind(const char* name, size_t who, int rcb, int opt) {
   return LUA_ERRRUN;
 }
 
-SKYNET_API int lua_r_response(const std::string& data, size_t caller, int rcf) {
+static void cancel_block(const std::string& data, int rcf, size_t sn) {
+  auto iter = invoke_pendings.find(sn);
+  if (iter == invoke_pendings.end()) {
+    return;
+  }
+  invoke_pendings.erase(sn);
+  auto executor = find_service(std::abs(rcf));
+  if (!executor) {
+    return;
+  }
+  std::string* pcontext = (std::string*)executor->get_context();
+  if (pcontext) {
+    pcontext->assign(data);
+    executor->cancel();
+  }
+}
+
+SKYNET_API int lua_r_response(const std::string& data, size_t caller, int rcf, size_t sn) {
   if (is_local(caller)) {
     if (rcf < 0) {
       auto executor = find_service(std::abs(rcf));
       if (executor) {
-        auto ctx = executor->get_context();
-        if (ctx) {
-          ((std::string*)ctx)->assign(data);
-          executor->cancel();
-          return LUA_OK;
-        }
+        executor->post(_bind(cancel_block, data, rcf, sn));
+        return LUA_OK;
       }
     }
     else {
       auto executor = find_service((int)caller);
       if (executor) {
-        executor->post(_bind(back_to_local, data, rcf));
+        executor->post(_bind(back_to_local, data, rcf, sn));
         return LUA_OK;
       }
     }
@@ -637,7 +668,7 @@ SKYNET_API int lua_r_response(const std::string& data, size_t caller, int rcf) {
   return LUA_ERRRUN;
 }
 
-SKYNET_API int lua_r_deliver(const char* name, const char* data, size_t size, size_t mask, size_t who, size_t caller, int rcf) {
+SKYNET_API int lua_r_deliver(const char* name, const char* data, size_t size, size_t mask, size_t who, size_t caller, int rcf, size_t sn) {
   node_type node;
   node.who = who;
   topic_type topic(name);
@@ -653,21 +684,6 @@ SKYNET_API int lua_r_deliver(const char* name, const char* data, size_t size, si
   }
   if (!is_local(caller) && !is_local(who)) {
     return 0;
-  }
-  /* if there is a receiver */
-  if (who) {
-    auto find = val.find(node);
-    if (find == val.end()) {
-      return 0;
-    }
-    if (!is_local(caller)) {
-      /* can't call by remote */
-      if (find->opt == 0) {
-        return 0;
-      }
-    }
-    auto rcb = find->rcb;
-    return dispatch(topic, rcb, data, size, mask, who, caller, rcf);
   }
   /* if the mask is set */
   if (mask) {
@@ -690,13 +706,28 @@ SKYNET_API int lua_r_deliver(const char* name, const char* data, size_t size, si
       node.who = who;
     }
   }
+  /* if there is a receiver */
+  if (who) {
+    auto find = val.find(node);
+    if (find == val.end()) {
+      return 0;
+    }
+    if (!is_local(caller)) {
+      /* can't call by remote */
+      if (find->opt == 0) {
+        return 0;
+      }
+    }
+    auto rcb = find->rcb;
+    return dispatch(topic, rcb, data, size, mask, who, caller, rcf, sn);
+  }
   /* dispatch to all receivers */
   int count = 0;
   auto find = val.begin();
   for (; find != val.end(); ++find) {
     auto rcb = find->rcb;
     auto who = find->who;
-    count += dispatch(topic, rcb, data, size, mask, who, caller, rcf);
+    count += dispatch(topic, rcb, data, size, mask, who, caller, rcf, sn);
   }
   return count;
 }

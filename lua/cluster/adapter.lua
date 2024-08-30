@@ -88,14 +88,16 @@ local function ws_on_receive(peer, data, ec)
 	local who    = info.who;
 	local caller = info.caller << 16 | id;
 	local rcf    = info.rcf;
-	os.r_deliver(name, argv, mask, who, caller, rcf);
+	local sn     = info.sn;
+	os.r_deliver(name, argv, mask, who, caller, rcf, sn);
 	return;
-  end  
+  end
   if what == proto_type.response then
     local data   = info.data;
 	local caller = info.caller;
 	local rcf    = info.rcf;
-	os.r_response(data, caller, rcf);
+	local sn     = info.sn;
+	os.r_response(data, caller, rcf, sn);
 	return;
   end  
   if what == proto_type.bind then

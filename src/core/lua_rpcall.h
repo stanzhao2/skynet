@@ -23,8 +23,8 @@ SKYNET_API int check_timeout();
 SKYNET_API int lua_lookout   (lua_CFunction f);
 SKYNET_API int lua_r_bind    (const char* name, size_t who, int rcb, int opt);
 SKYNET_API int lua_r_unbind  (const char* name, size_t who, int* opt);
-SKYNET_API int lua_r_deliver (const char* name, const char* data, size_t size, size_t mask, size_t who, size_t caller, int rcf);
-SKYNET_API int lua_r_response(const std::string& data, size_t caller, int rcf);
+SKYNET_API int lua_r_deliver (const char* name, const char* data, size_t size, size_t mask, size_t who, size_t caller, int rcf, size_t sn);
+SKYNET_API int lua_r_response(const std::string& data, size_t caller, int rcf, size_t sn);
 
 /********************************************************************************/
 
