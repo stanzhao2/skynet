@@ -50,7 +50,9 @@ struct directory final {
     return checkudata<directory>(L, 1, name());
   }
   static int __gc(lua_State* L) {
-    __this(L)->~directory();
+    auto self = __this(L);
+    self->close(L);
+    self->~directory();
     return 0;
   }
   static int close(lua_State* L) {

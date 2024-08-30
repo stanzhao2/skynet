@@ -8,9 +8,6 @@ struct class_list final {
   inline class_list()
     : iter(data.end()) {
   }
-  inline ~class_list() {
-    __clear(nullptr);
-  }
   inline int __clear(lua_State* L) {
     for (auto iter = data.begin(); iter != data.end(); ++iter) {
       lua_unref(L, *iter);
@@ -144,7 +141,9 @@ public:
     return __this(L)->__clear(L);
   }
   inline static int __gc(lua_State* L) {
-    __this(L)->~class_list();
+    auto self = __this(L);
+    self->__clear(L);
+    self->~class_list();
     return 0;
   }
   inline static int size(lua_State* L) {

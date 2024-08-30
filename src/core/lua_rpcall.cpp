@@ -89,7 +89,7 @@ static void cancel_invoke(int rcf) {
     if (lua_status(coL) != LUA_YIELD) {
       return;
     }
-    int argc = 1;
+    int argc = 0;
     lua_pushboolean(coL, 0); /* false */
     lua_pushstring(coL, "timeout");
     lua_resume(coL, L, 2, &argc);
@@ -433,6 +433,15 @@ static int luac_invoke(lua_State* L) {
   return 1;
 }
 
+static int finishpcall(lua_State *L, int status, lua_KContext extra) {
+  if (luai_unlikely(status != LUA_OK && status != LUA_YIELD)) {  /* error? */
+    lua_pushboolean(L, 0);  /* first result (false) */
+    lua_pushvalue(L, -2);  /* error message */
+    return 2;  /* return false, msg */
+  }
+  return lua_gettop(L) - (int)extra;  /* return all results */
+}
+
 static int luac_rpcall(lua_State* L) {
   if (lua_type(L, 1) == LUA_TFUNCTION) {
     return luac_invoke(L);
@@ -473,7 +482,8 @@ static int luac_rpcall(lua_State* L) {
   invoke_pendings[sn] = pend;
   /* in coroutine */
   if (rcf > 0) {
-    return lua_yieldk(L, 0, 0, 0);
+    lua_settop(L, 0);
+    return lua_yield(L, 0);
   }
   /* not in coroutine */
   std::string rpcall_ret;
