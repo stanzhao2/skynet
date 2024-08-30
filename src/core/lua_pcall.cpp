@@ -41,7 +41,6 @@ static int finishpcall(lua_State *L, int status, lua_KContext extra) {
 static int luac_xpcall(lua_State *L) {
   int status;
   int n = lua_gettop(L);
-  luaL_checktype(L, 2, LUA_TFUNCTION);  /* check error function */
   lua_pushboolean(L, 1);  /* first result */
   lua_pushvalue(L, 1);    /* function */
   lua_rotate(L, 3, 2);    /* move them below function's arguments */
@@ -50,7 +49,6 @@ static int luac_xpcall(lua_State *L) {
 }
 
 static int luac_pcall(lua_State* L) {
-  luaL_checktype(L, 1, LUA_TFUNCTION);  /* check pcall function */
   lua_pushcfunction(L, traceback);
   lua_insert(L, 2);
   return luac_xpcall(L);

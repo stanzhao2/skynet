@@ -79,16 +79,15 @@ static int watch_handler(lua_State* L) {
 }
 
 static void cancel_invoke(int rcf, size_t sn) {
-  auto L = lua_local();
-  lua_auto_revert revert(L);
-  lua_auto_unref  unref_rcf(L, rcf);
-  assert(rcf > 0);
-
   auto iter = invoke_pendings.find(sn);
   if (iter == invoke_pendings.end()) {
     return;
   }
-  invoke_pendings.erase(sn);
+  auto L = lua_local();
+  lua_auto_revert revert(L);
+  lua_auto_unref  unref_rcf(L, rcf);
+  assert(rcf > 0);
+  invoke_pendings.erase(iter);
 
   int type = lua_pushref(L, rcf);
   if (type == LUA_TTHREAD) {
@@ -142,14 +141,14 @@ static int check_timeout() {
 
 /* calling the caller callback function */
 static void back_to_local(const std::string& data, int rcf, size_t sn) {
-  lua_State* L = lua_local();
-  lua_auto_revert revert(L);
-  lua_auto_unref  unref_rcf(L, rcf);
-  assert(rcf > 0);
   auto iter = invoke_pendings.find(sn);
   if (iter == invoke_pendings.end()) {
     return;
   }
+  lua_State* L = lua_local();
+  lua_auto_revert revert(L);
+  lua_auto_unref  unref_rcf(L, rcf);
+  assert(rcf > 0);
   invoke_pendings.erase(iter);
   int type = lua_pushref(L, rcf);
   if (type == LUA_TTHREAD) {
@@ -707,8 +706,7 @@ static void cancel_block(const std::string& data, int rcf, size_t sn) {
   if (iter == invoke_pendings.end()) {
     return;
   }
-  invoke_pendings.erase(sn);
-
+  invoke_pendings.erase(iter);
   auto executor = find_service(std::abs(rcf));
   if (!executor) {
     return;

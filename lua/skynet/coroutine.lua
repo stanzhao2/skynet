@@ -41,7 +41,7 @@ end
 function co_class:close(func)
   assert(func == nil or type(func) == "function");
   self.closed = func;
-  if self.tasklist.empty() then
+  if coroutine.status(self.co) == "suspended" and self.tasklist.empty() then
     os.post(coroutine.resume, self.co);
   end
 end
@@ -50,7 +50,7 @@ end
 
 function co_class:comain()
   while true do
-    if self.tasklist:empty() then
+    if self.tasklist:size() == 0 then
       if self.closed then
         break;
       end
@@ -71,7 +71,7 @@ function co_class:dispatch(task)
   assert(type(task) == "function");
   if not self.closed then
     self.tasklist:push_back(task);
-    if self.tasklist:size() == 1 then
+    if coroutine.status(self.co) == "suspended" and self.tasklist:size() == 1 then
       os.post(coroutine.resume, self.co);
     end
   end
