@@ -259,6 +259,21 @@ static int dispatch(const topic_type& topic, const std::string& what, int rcb, s
   return executor ? 1 : 0;
 }
 
+static int response(const char* data, size_t size, size_t caller, int rcf, size_t sn) {
+  /* if don't need result */
+  if (rcf == 0) {
+    return 0;
+  }
+  std::string temp(data, size);
+  if (is_local(caller)) {
+    lua_r_response(temp, caller, rcf, sn);
+  }
+  else {
+    forword(temp, caller, rcf, sn);
+  }
+  return 1;
+}
+
 static int responser(lua_State* L) {
   lua_pushboolean(L, 1);
   lua_insert(L, 1);
@@ -268,17 +283,7 @@ static int responser(lua_State* L) {
   size_t caller    = luaL_checkinteger(L, lua_upvalueindex(1));
   int rcf          = (int)luaL_checkinteger(L, lua_upvalueindex(2));
   size_t sn        = luaL_checkinteger(L, lua_upvalueindex(3));
-
-  /* need result of this invoke */
-  if (rcf != 0) {
-    std::string temp(data, size);
-    if (is_local(caller)) {
-      lua_r_response(temp, caller, rcf, sn);
-    }
-    else {
-      forword(temp, caller, rcf, sn);
-    }
-  }
+  response(data, size, caller, rcf, sn);
   return 0;
 }
 
@@ -306,6 +311,12 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
       lua_auto_revert revert(L);
       int type = lua_pushref(L, rcb);
       if (type != LUA_TFUNCTION) {
+        lua_pushboolean(L, 0);
+        lua_pushstring(L, "function not found");
+        lua_wrap(L, 2);
+        size_t nsize;
+        const char* result = luaL_checklstring(L, -1, &nsize);
+        response(result, nsize, caller, rcf, sn);
         return;
       }
       int argc = 0;
@@ -342,10 +353,6 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
           return;
         }
       }
-      /* don't need result */
-      if (rcf == 0) {
-        return;
-      }
       lua_pushboolean(L, callok == LUA_OK ? 1 : 0);
       int count = lua_gettop(L) - revert.top();
       if (count > 1) {
@@ -354,12 +361,7 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
       lua_wrap(L, count);
       size_t nsize;
       const char* result = luaL_checklstring(L, -1, &nsize);
-      std::string temp(result, nsize);
-      if (is_local(caller)) {
-        lua_r_response(temp, caller, rcf, sn);
-        return;
-      }
-      forword(temp, caller, rcf, sn);
+      response(result, nsize, caller, rcf, sn);
     }
   );
   return 1;
