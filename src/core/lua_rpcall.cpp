@@ -78,10 +78,16 @@ static int watch_handler(lua_State* L) {
   return 0;
 }
 
-static void cancel_invoke(int rcf) {
+static void cancel_invoke(int rcf, size_t sn) {
   auto L = lua_local();
   lua_auto_revert revert(L);
-  lua_auto_unref  unref_rcf(L, rcf);
+  lua_auto_unref  unref_rcf(L, std::abs(rcf));
+
+  auto iter = invoke_pendings.find(sn);
+  if (iter == invoke_pendings.end()) {
+    return;
+  }
+  invoke_pendings.erase(sn);
 
   int type = lua_pushref(L, rcf);
   if (type == LUA_TTHREAD) {
@@ -89,15 +95,17 @@ static void cancel_invoke(int rcf) {
     if (lua_status(coL) != LUA_YIELD) {
       return;
     }
-    int argc = 0;
+    int argc = 2, nret = 0;
     lua_pushboolean(coL, 0); /* false */
     lua_pushstring(coL, "timeout");
-    lua_resume(coL, L, 2, &argc);
+    int state = lua_resume(coL, L, argc, &nret);
+    lua_pop(L, nret);
     return;
   }
   if (type == LUA_TFUNCTION) {
     lua_pushboolean(L, 0); /* false */
-    if (lua_pcall(L, 1, 0) != LUA_OK) {
+    lua_pushstring(L, "timeout");
+    if (lua_pcall(L, 2, 0) != LUA_OK) {
       lua_ferror("%s\n", luaL_checkstring(L, -1));
     }
   }
@@ -107,19 +115,16 @@ static int check_timeout() {
   static thread_local steady_timer _timer(*lua_service());
   auto now  = steady_clock();
   auto iter = invoke_pendings.begin();
-  for (; iter != invoke_pendings.end();) {
+  for (; iter != invoke_pendings.end(); ++iter) {
     auto timeout = iter->second.timeout;
     if (now < timeout) {
-      ++iter;
       continue;
     }
     auto rcf = iter->second.rcf;
     auto caller = iter->second.caller;
-    iter = invoke_pendings.erase(iter);
-
     auto executor = find_service(caller);
     if (executor) {
-      executor->post(_bind(cancel_invoke, rcf));
+      executor->post(_bind(cancel_invoke, rcf, iter->first));
     }
   }
   _timer.expires_after(std::chrono::milliseconds(1000));
@@ -149,7 +154,8 @@ static void back_to_local(const std::string& data, int rcf, size_t sn) {
     }
     lua_pushlstring(coL, data.c_str(), data.size());
     int argc = lua_unwrap(coL);
-    lua_resume(coL, L, argc, &argc);
+    int state = lua_resume(coL, L, argc, &argc);
+    printf("%d\n", state);
     return;
   }
   if (type == LUA_TFUNCTION) {
@@ -482,6 +488,7 @@ static int luac_rpcall(lua_State* L) {
   invoke_pendings[sn] = pend;
   /* in coroutine */
   if (rcf > 0) {
+    lua_settop(L, 0);
     return lua_yield(L, lua_gettop(L));
   }
   /* not in coroutine */
