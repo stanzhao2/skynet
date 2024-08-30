@@ -33,7 +33,7 @@
 -   os.responser()
 -   os.compile(fname [, oname])
 -   os.name()
--   os.timer([name]) #2
+-   os.timer() #2
 -   os.dirsep()
 -   os.mkdir(name)
 -   os.opendir([name])

@@ -33,7 +33,6 @@ struct class_timer final {
     });
     return 0;
   }
-  std::string  _name;
   steady_timer _timer;
 
 public:
@@ -75,13 +74,12 @@ public:
       lua_pushstring(L, "no memory");
       return 2;
     }
-    self->_name = luaL_optstring(L, 1, "no name");
     return 1;
   }
   static int open_library(lua_State* L) {
     init_metatable(L);
     const luaL_Reg methods[] = {
-      { "_timer",  create   }, /* os._timer() */
+      { "timer",  create   }, /* os.timer() */
       { NULL,     NULL     }
     };
     lua_getglobal(L, "os");
