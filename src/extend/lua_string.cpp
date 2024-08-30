@@ -72,7 +72,7 @@ static int luac_split(lua_State* L) {
 
 /********************************************************************************/
 
-SKYNET_API int luaopen_string(lua_State* L) {
+SKYNET_API int luaopen_lstring(lua_State* L) {
   const luaL_Reg methods[] = {
     { "split",    luac_split    }, /* string.split(s, r) */
     { "trim",     luac_trim     }, /* string.trim(s) */

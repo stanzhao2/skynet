@@ -25,7 +25,7 @@ static const lua_CFunction skynet_modules[] = {
   luaopen_deflate,      /* deflate, inflate */
   luaopen_base64,       /* base64.encode  */
   luaopen_crypto,       /* crypto.sha1 ... */
-  luaopen_string,       /* string.split    */
+  luaopen_lstring,      /* string.split    */
   luaopen_storage,      /*  */
   NULL
 };

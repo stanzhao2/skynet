@@ -45,8 +45,8 @@ static const char* skip_common(lua_State* L, const char* buff, size_t& size) {
     if (!is_utf8(buff, size)) {
       return NULL;
     }
-  }
 #endif
+  }
   return buff;
 }
 
