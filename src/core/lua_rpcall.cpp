@@ -50,6 +50,7 @@ static rpcall_map_type rpcall_handlers;
 
 static thread_local size_t rpcall_nextid = 0;
 static thread_local size_t rpcall_caller = 0;
+static thread_local int    rpcall_r_handler = 0;
 static thread_local invoke_map_type invoke_pendings;
 
 /********************************************************************************/
@@ -258,6 +259,29 @@ static int dispatch(const topic_type& topic, const std::string& what, int rcb, s
   return executor ? 1 : 0;
 }
 
+static int responser(lua_State* L) {
+  lua_pushboolean(L, 1);
+  lua_insert(L, 1);
+  lua_wrap(L, lua_gettop(L));
+  size_t size = 0;
+  const char* data = luaL_checklstring(L, -1, &size);
+  size_t caller    = luaL_checkinteger(L, lua_upvalueindex(1));
+  int rcf          = (int)luaL_checkinteger(L, lua_upvalueindex(2));
+  size_t sn        = luaL_checkinteger(L, lua_upvalueindex(3));
+
+  /* need result of this invoke */
+  if (rcf != 0) {
+    std::string temp(data, size);
+    if (is_local(caller)) {
+      lua_r_response(temp, caller, rcf, sn);
+    }
+    else {
+      forword(temp, caller, rcf, sn);
+    }
+  }
+  return 0;
+}
+
 /* calling the receiver function */
 /*
 ** who: receiver
@@ -289,14 +313,35 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
         lua_pushlstring(L, argv.c_str(), argv.size());
         argc += lua_unwrap(L);
       }
+      int prev_handler = rpcall_r_handler;
+      if (rcf != 0) {
+        lua_pushinteger(L, caller);
+        lua_pushinteger(L, rcf);
+        lua_pushinteger(L, sn);
+        lua_pushcclosure(L, responser, 3);
+        rpcall_r_handler = lua_ref(L, -1);
+        lua_pop(L, 1);
+      }
       size_t previous = rpcall_caller;
       rpcall_caller = caller;
-
       int callok = lua_pcall(L, argc, LUA_MULTRET);
       if (callok != LUA_OK) {
         lua_ferror("%s\n", lua_tostring(L, -1));
       }
       rpcall_caller = previous;
+      bool need_response = false;
+      if (rpcall_r_handler > 0) {
+        need_response = true;
+        lua_unref(L, rpcall_r_handler);
+      }
+      rpcall_r_handler = prev_handler;
+      /* call success and need't response */
+      if (callok == LUA_OK) {
+        /* maybe will run in coroutine */
+        if (!need_response) {
+          return;
+        }
+      }
       /* don't need result */
       if (rcf == 0) {
         return;
@@ -306,7 +351,6 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
       if (count > 1) {
         lua_rotate(L, -count, 1);
       }
-      /* return result */
       lua_wrap(L, count);
       size_t nsize;
       const char* result = luaL_checklstring(L, -1, &nsize);
@@ -323,8 +367,19 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
 
 /********************************************************************************/
 
-static int luac_caller(lua_State* L) {
+static int luac_r_caller(lua_State* L) {
   lua_pushinteger(L, (lua_Integer)rpcall_caller);
+  return 1;
+}
+
+static int luac_r_handler(lua_State* L) {
+  if (rpcall_r_handler == 0) {
+    lua_pushnil(L);
+  }
+  else {
+    lua_pushref(L, rpcall_r_handler);
+    rpcall_r_handler = 0;
+  }
   return 1;
 }
 
@@ -559,9 +614,10 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
     { "lookout",    luac_lookout    },
     { "declare",    luac_declare    },
     { "undeclare",  luac_undeclare  },
-    { "caller",     luac_caller     },
     { "rpcall",     luac_rpcall     },
     { "deliver",    luac_deliver    },
+    { "caller",     luac_r_caller   },
+    { "responser",  luac_r_handler  },
 
     { "r_deliver",  luac_r_deliver  },
     { "r_bind",     luac_r_bind     },
