@@ -81,7 +81,8 @@ static int watch_handler(lua_State* L) {
 static void cancel_invoke(int rcf, size_t sn) {
   auto L = lua_local();
   lua_auto_revert revert(L);
-  lua_auto_unref  unref_rcf(L, std::abs(rcf));
+  lua_auto_unref  unref_rcf(L, rcf);
+  assert(rcf > 0);
 
   auto iter = invoke_pendings.find(sn);
   if (iter == invoke_pendings.end()) {
@@ -121,6 +122,9 @@ static int check_timeout() {
       continue;
     }
     auto rcf = iter->second.rcf;
+    if (rcf < 0) {
+      continue;
+    }
     auto caller = iter->second.caller;
     auto executor = find_service(caller);
     if (executor) {
@@ -141,6 +145,7 @@ static void back_to_local(const std::string& data, int rcf, size_t sn) {
   lua_State* L = lua_local();
   lua_auto_revert revert(L);
   lua_auto_unref  unref_rcf(L, rcf);
+  assert(rcf > 0);
   auto iter = invoke_pendings.find(sn);
   if (iter == invoke_pendings.end()) {
     return;
@@ -153,9 +158,8 @@ static void back_to_local(const std::string& data, int rcf, size_t sn) {
       return;
     }
     lua_pushlstring(coL, data.c_str(), data.size());
-    int argc = lua_unwrap(coL);
+    int argc  = lua_unwrap(coL);
     int state = lua_resume(coL, L, argc, &argc);
-    printf("%d\n", state);
     return;
   }
   if (type == LUA_TFUNCTION) {
@@ -439,15 +443,6 @@ static int luac_invoke(lua_State* L) {
   return 1;
 }
 
-static int finishpcall(lua_State *L, int status, lua_KContext extra) {
-  if (luai_unlikely(status != LUA_OK && status != LUA_YIELD)) {  /* error? */
-    lua_pushboolean(L, 0);  /* first result (false) */
-    lua_pushvalue(L, -2);  /* error message */
-    return 2;  /* return false, msg */
-  }
-  return lua_gettop(L) - (int)extra;  /* return all results */
-}
-
 static int luac_rpcall(lua_State* L) {
   if (lua_type(L, 1) == LUA_TFUNCTION) {
     return luac_invoke(L);
@@ -496,8 +491,8 @@ static int luac_rpcall(lua_State* L) {
   executor->set_context(&rpcall_ret);
   bool result = executor->wait_for(max_expires);
   executor->set_context(nullptr);
-
   invoke_pendings.erase(sn);
+
   if (executor->stopped()) {
     lua_pushboolean(L, 0); /* false */
     lua_pushstring(L, "cancel");
@@ -707,11 +702,13 @@ SKYNET_API int lua_r_bind(const char* name, size_t who, int rcb, int opt) {
 }
 
 static void cancel_block(const std::string& data, int rcf, size_t sn) {
+  assert(rcf < 0);
   auto iter = invoke_pendings.find(sn);
   if (iter == invoke_pendings.end()) {
     return;
   }
   invoke_pendings.erase(sn);
+
   auto executor = find_service(std::abs(rcf));
   if (!executor) {
     return;
