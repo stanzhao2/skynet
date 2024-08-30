@@ -482,8 +482,7 @@ static int luac_rpcall(lua_State* L) {
   invoke_pendings[sn] = pend;
   /* in coroutine */
   if (rcf > 0) {
-    lua_settop(L, 0);
-    return lua_yield(L, 0);
+    return lua_yield(L, lua_gettop(L));
   }
   /* not in coroutine */
   std::string rpcall_ret;
