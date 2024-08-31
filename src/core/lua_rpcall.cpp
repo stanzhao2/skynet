@@ -59,13 +59,14 @@ static inline size_t next_sn() {
   return ++rpcall_nextid;
 }
 
-static inline bool remove_of_pending(size_t sn) {
+static inline int remove_of_pending(size_t sn) {
   auto iter = invoke_pendings.find(sn);
   if (iter != invoke_pendings.end()) {
+    int rcf = iter->second.rcf;
     invoke_pendings.erase(iter);
-    return true;
+    return rcf;
   }
-  return false;
+  return 0;
 }
 
 static void insert_of_pending(int caller, int rcf, size_t sn) {
@@ -96,8 +97,8 @@ static int watch_handler(lua_State* L) {
 }
 
 static void cancel_invoke(int rcf, size_t sn) {
-  assert(rcf > 0);
-  if (!remove_of_pending(sn)) {
+  rcf = remove_of_pending(sn);
+  if (rcf == 0) {
     return;
   }
   auto L = lua_local();
@@ -127,8 +128,8 @@ static void cancel_invoke(int rcf, size_t sn) {
 }
 
 static void cancel_block(const std::string& data, int rcf, size_t sn) {
-  assert(rcf < 0);
-  if (!remove_of_pending(sn)) {
+  rcf = remove_of_pending(sn);
+  if (rcf == 0) {
     return;
   }
   auto executor = find_service(std::abs(rcf));
@@ -144,8 +145,8 @@ static void cancel_block(const std::string& data, int rcf, size_t sn) {
 
 /* calling the caller callback function */
 static void back_to_local(const std::string& data, int rcf, size_t sn) {
-  assert(rcf > 0);
-  if (!remove_of_pending(sn)) {
+  rcf = remove_of_pending(sn);
+  if (rcf == 0) {
     return;
   }
   lua_State* L = lua_local();
