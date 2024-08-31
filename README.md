@@ -8,19 +8,13 @@
 -   skynet http.broker [port] [host] [ca] [key] [pwd] 
 
  **global functions**
--   bind(func, [, ...])
--   pcall(func [, ...])
--   print(fmt [, ...])
 -   trace(fmt [, ...])
--   error(fmt [, ...])
 -   throw(fmt [, ...])
+-   bind(func, [, ...])
+-   compress(str [,<gzip/deflate>])
+-   uncompress(str [,<gzip/inflate>])
 -   wrap(...)
--   unwrap(s)
--   unwrap_rest(s [, offset])
--   unwrap_one(s [, offset])
--   unwrap_limit(s, n [, offset])
--   deflate(str [,<true/false>])
--   inflate(str [,<true/false>])
+-   unwrap(str)
 
  **os functions** 
 -   os.version()
@@ -71,6 +65,7 @@
  **io functions** 
 -   io.socket(<tcp/ssl/ws/wss>, [context]]) #4
 -   io.server(<tcp/ssl/ws/wss>, [context]) #5
+-   io.context() #6
 -   io.http.request_parser(options)
 -   io.http.response_parser(options)
 -   io.http.parse_url(url)
@@ -95,6 +90,11 @@
 -   server:close();
 -   server:endpoint()
 
+ **context functions**
+-   context:certificate(str)
+-   context:key(str)
+-   context:password(str)
+ 
  **timer functions**
 -   timer:expires(ms, func)
 -   timer:cancel()
@@ -151,3 +151,4 @@
 -  _#3: return list object
 -  _#4: return socket object
 -  _#5: return server object
+-  _#6: return ssl context object

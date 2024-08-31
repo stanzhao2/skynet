@@ -183,7 +183,7 @@ local function co_on_request(method, session)
     if encoding then
       if encoding:find("gzip") then
         encoding = "gzip";
-        result = deflate(result);
+        result = compress(result, encoding);
       else
         encoding = nil;
       end
@@ -317,7 +317,7 @@ function main(port, host, ca, key, pwd)
   end
   local context;
   if ca and key then
-    context = io.ssl_context();
+    context = io.context();
     context:certificate(ca);
     context:key(key);
     if pwd then

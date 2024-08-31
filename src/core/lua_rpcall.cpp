@@ -482,8 +482,8 @@ static int luac_rpcall(lua_State* L) {
   }
   auto sn = next_sn();
   auto executor = lua_service();
-  int caller = executor->id();
-  int rcf = 0 - caller;
+  int  caller = executor->id();
+  int  rcf = 0 - caller;
   /* if invoke by coroutine */
   if (lua_isyieldable(L)) {
     lua_State* main = lua_local();
@@ -492,7 +492,7 @@ static int luac_rpcall(lua_State* L) {
     rcf = lua_ref(main, -1);
     lua_pop(main, 1);
   }
-  int count = lua_r_deliver(name, data, size, rand(), 0, caller, rcf, sn);
+  int count = lua_r_deliver(name, data, size, sn, 0, caller, rcf, sn);
   if (count == 0) {
     if (rcf > 0) {
       lua_unref(L, rcf);
@@ -501,13 +501,13 @@ static int luac_rpcall(lua_State* L) {
     lua_pushfstring(L, "%s not found", name);
     return 2;
   }
+  /* run in coroutine */
   insert_of_pending(caller, rcf, sn);
-  /* in coroutine */
   if (rcf > 0) {
     lua_settop(L, 0);
     return lua_yield(L, lua_gettop(L));
   }
-  /* not in coroutine */
+  /* call will be blocked */
   std::string rpcall_ret;
   executor->set_context(&rpcall_ret);
   bool result = executor->wait_for(max_expires);

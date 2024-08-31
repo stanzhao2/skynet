@@ -94,8 +94,8 @@ struct ssl_context final {
   static int open_library(lua_State* L) {
     init_metatable(L);
     const luaL_Reg methods[] = {
-      { "ssl_context",  create   }, /* os.ssl_context() */
-      { NULL,           NULL     }
+      { "context",  create   }, /* io.context() */
+      { NULL,       NULL     }
     };
     lua_getglobal(L, "io");
     luaL_setfuncs(L, methods, 0);

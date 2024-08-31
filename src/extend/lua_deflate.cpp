@@ -9,12 +9,12 @@
 static int gzip_deflate(lua_State *L) {
   size_t size = 0;
   const char* data = (char*)luaL_checklstring(L, 1, &size);
-  bool gzip = true;
-  if (!lua_isnoneornil(L, 2)){
-    luaL_checktype(L, 2, LUA_TBOOLEAN);
-    gzip = lua_toboolean(L, 2) ? true : false;
+  std::string type = luaL_optstring(L, 2, "deflate");
+  if (type != "gzip" && type != "deflate") {
+    luaL_error(L, "unknown type: %s", type);
   }
   std::string output;
+  bool gzip = (type == "gzip") ? true : false;
   if (!do_deflate(data, size, gzip, output)) {
     lua_pushnil(L);
   }
@@ -27,12 +27,12 @@ static int gzip_deflate(lua_State *L) {
 static int gzip_inflate(lua_State *L) {
   size_t size = 0;
   const char* data = (char*)luaL_checklstring(L, 1, &size);
-  bool gzip = true;
-  if (!lua_isnoneornil(L, 2)){
-    luaL_checktype(L, 2, LUA_TBOOLEAN);
-    gzip = lua_toboolean(L, 2) ? true : false;
+  std::string type = luaL_optstring(L, 2, "inflate");
+  if (type != "gzip" && type != "inflate") {
+    luaL_error(L, "unknown type: %s", type);
   }
   std::string output;
+  bool gzip = (type == "gzip") ? true : false;
   if (!do_inflate(data, size, gzip, output)){
     lua_pushnil(L);
   }
@@ -47,8 +47,8 @@ static int gzip_inflate(lua_State *L) {
 SKYNET_API int luaopen_deflate(lua_State* L) {
   lua_getglobal(L, LUA_GNAME);
   const luaL_Reg methods[] = {
-    { "deflate",    gzip_deflate   },  /* deflate  */
-    { "inflate",    gzip_inflate   },  /* inflate  */
+    { "compress",   gzip_deflate   },  /* compress   */
+    { "uncompress", gzip_inflate   },  /* uncompress */
     { NULL,         NULL           },
   };
   luaL_setfuncs(L, methods, 0);
