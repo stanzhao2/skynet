@@ -8,113 +8,128 @@ struct class_list final {
   inline class_list()
     : iter(data.end()) {
   }
-  inline int __clear(lua_State* L) {
-    for (auto iter = data.begin(); iter != data.end(); ++iter) {
-      lua_unref(L, *iter);
-    }
-    data.clear();
-    return 0;
-  }
-  inline int __size(lua_State* L) {
-    lua_pushinteger(L, (lua_Integer)data.size());
-    return 1;
-  }
-  inline int __empty(lua_State* L) {
-    lua_pushboolean(L, data.empty() ? 1 : 0);
-    return 1;
-  }
-  inline int __erase(lua_State* L) {
-    if (iter != data.end()) {
-      auto i = --iter;
-      lua_unref(L, *i);
-      iter++;
-      data.erase(i);
-    }
-    else if (!data.empty()) {
-      lua_unref(L, data.back());
-      data.pop_back();
-    }
-    return 0;
-  }
-  inline int __reverse(lua_State* L) {
-    data.reverse();
-    return 0;
-  }
-  inline int __front(lua_State* L) {
-    if (data.empty()) {
-      lua_pushnil(L);
-    }
-    else {
-      lua_pushref(L, data.front());
-    }
-    return 1;
-  }
-  inline int __back(lua_State* L) {
-    if (data.empty()) {
-      lua_pushnil(L);
-    }
-    else {
-      lua_pushref(L, data.back());
-    }
-    return 1;
-  }
-  inline int __pop_front(lua_State* L) {
-    if (!data.empty()) {
-      int front = data.front();
-      data.pop_front();
-      lua_unref(L, front);
-    }
-    return 0;
-  }
-  inline int __pop_back(lua_State* L){
-    if (!data.empty()) {
-      if (iter != data.end()) {
-        --iter;
-      }
-      int back = data.back();
-      data.pop_back();
-      lua_unref(L, back);
-      if (data.empty()) {
-        iter = data.end();
-      }
-      else if (iter != data.end()) {
-        ++iter;
-      }
-    }
-    return 0;
-  }
-  inline int __push_front(lua_State* L){
-    luaL_checkany(L, 2);
-    data.push_front(lua_ref(L, 2));
-    return 0;
-  }
-  inline int __push_back(lua_State* L){
-    luaL_checkany(L, 2);
-    data.push_back(lua_ref(L, 2));
-    return 0;
-  }
-  inline int __iterator(lua_State* L){
-    if (iter == data.end()) {
-      return 0;
-    }
-    lua_pushref(L, *(iter++));
-    return 1;
-  }
-  inline int __pairs(lua_State* L) {
-    iter = data.begin();
-    lua_pushlightuserdata(L, this);
-    lua_pushcclosure(L, iterator, 1);
-    return 1;
-  }
-  std::list<int> data;
-  std::list<int>::iterator iter;
-
-public:
   inline static const char* name() {
     return "lua list";
   }
   inline static class_list* __this(lua_State* L) {
     return checkudata<class_list>(L, 1, name());
+  }
+  static int clear(lua_State* L) {
+    auto self = __this(L);
+    auto ppos = self->data.begin();
+    for (; ppos != self->data.end(); ++ppos) {
+      lua_unref(L, *ppos);
+    }
+    self->data.clear();
+    return 0;
+  }
+  static int __gc(lua_State* L) {
+    clear(L);
+    __this(L)->~class_list();
+    return 0;
+  }
+  static int size(lua_State* L) {
+    auto self = __this(L);
+    lua_pushinteger(L, (lua_Integer)self->data.size());
+    return 1;
+  }
+  static int empty(lua_State* L) {
+    auto self = __this(L);
+    lua_pushboolean(L, self->data.empty() ? 1 : 0);
+    return 1;
+  }
+  static int erase(lua_State* L) {
+    auto self = __this(L);
+    if (self->iter != self->data.end()) {
+      auto i = --self->iter;
+      lua_unref(L, *i);
+      self->iter++;
+      self->data.erase(i);
+    }
+    else if (!self->data.empty()) {
+      lua_unref(L, self->data.back());
+      self->data.pop_back();
+    }
+    return 0;
+  }
+  static int reverse(lua_State* L) {
+    auto self = __this(L);
+    self->data.reverse();
+    return 0;
+  }
+  static int front(lua_State* L) {
+    auto self = __this(L);
+    if (self->data.empty()) {
+      lua_pushnil(L);
+    }
+    else {
+      lua_pushref(L, self->data.front());
+    }
+    return 1;
+  }
+  static int back(lua_State* L) {
+    auto self = __this(L);
+    if (self->data.empty()) {
+      lua_pushnil(L);
+    }
+    else {
+      lua_pushref(L, self->data.back());
+    }
+    return 1;
+  }
+  static int pop_front(lua_State* L) {
+    auto self = __this(L);
+    if (!self->data.empty()) {
+      int ref = self->data.front();
+      self->data.pop_front();
+      lua_unref(L, ref);
+    }
+    return 0;
+  }
+  static int pop_back(lua_State* L) {
+    auto self = __this(L);
+    if (!self->data.empty()) {
+      if (self->iter != self->data.end()) {
+        --self->iter;
+      }
+      int back = self->data.back();
+      self->data.pop_back();
+      lua_unref(L, back);
+      if (self->data.empty()) {
+        self->iter = self->data.end();
+      }
+      else if (self->iter != self->data.end()) {
+        ++self->iter;
+      }
+    }
+    return 0;
+  }
+  static int push_front(lua_State* L) {
+    auto self = __this(L);
+    luaL_checkany(L, 2);
+    self->data.push_front(lua_ref(L, 2));
+    return 0;
+  }
+  static int push_back(lua_State* L) {
+    auto self = __this(L);
+    luaL_checkany(L, 2);
+    self->data.push_back(lua_ref(L, 2));
+    return 0;
+  }
+  static int iterator(lua_State* L) {
+    auto self = (class_list*)lua_touserdata(L, lua_upvalueindex(1));
+    if (self->iter == self->data.end()) {
+      return 0;
+    }
+    lua_pushref(L, *(self->iter++));
+    return 1;
+  }
+  static int pairs(lua_State* L) {
+    auto self = __this(L);
+    self->iter = self->data.begin();
+    lua_pushlightuserdata(L, self);
+    lua_pushcclosure(L, iterator, 1);
+    return 1;
   }
   static void init_metatable(lua_State* L) {
     const luaL_Reg methods[] = {
@@ -136,52 +151,6 @@ public:
     };
     newmetatable(L, name(), methods);
     lua_pop(L, 1);
-  }
-  inline static int clear(lua_State* L) {
-    return __this(L)->__clear(L);
-  }
-  inline static int __gc(lua_State* L) {
-    auto self = __this(L);
-    self->__clear(L);
-    self->~class_list();
-    return 0;
-  }
-  inline static int size(lua_State* L) {
-    return __this(L)->__size(L);
-  }
-  inline static int empty(lua_State* L) {
-    return __this(L)->__empty(L);
-  }
-  inline static int erase(lua_State* L) {
-    return __this(L)->__erase(L);
-  }
-  inline static int reverse(lua_State* L) {
-    return __this(L)->__reverse(L);
-  }
-  inline static int front(lua_State* L) {
-    return __this(L)->__front(L);
-  }
-  inline static int back(lua_State* L) {
-    return __this(L)->__back(L);
-  }
-  inline static int pop_front(lua_State* L) {
-    return __this(L)->__pop_front(L);
-  }
-  inline static int pop_back(lua_State* L) {
-    return __this(L)->__pop_back(L);
-  }
-  inline static int push_front(lua_State* L) {
-    return __this(L)->__push_front(L);
-  }
-  inline static int push_back(lua_State* L) {
-    return __this(L)->__push_back(L);
-  }
-  inline static int iterator(lua_State* L) {
-    auto self = (class_list*)lua_touserdata(L, lua_upvalueindex(1));
-    return self->__iterator(L);
-  }
-  inline static int pairs(lua_State* L) {
-    return __this(L)->__pairs(L);
   }
   static int create(lua_State* L) {
     auto self = newuserdata<class_list>(L, name());
@@ -209,6 +178,8 @@ public:
     need_pop ? lua_pop(L, 1) : lua_setglobal(L, "std");
     return 0;
   }
+  std::list<int> data;
+  std::list<int>::iterator iter;
 };
 
 /********************************************************************************/
