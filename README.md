@@ -8,13 +8,13 @@
 -   skynet http.broker [port] [host] [ca] [key] [pwd] 
 
  **global functions**
--   trace(fmt [, ...])
--   throw(fmt [, ...])
 -   bind(func, [, ...])
--   compress(str [,<gzip/deflate>])
--   uncompress(str [,<gzip/inflate>])
+-   trace(...)
+-   throw(...)
 -   wrap(...)
 -   unwrap(str)
+-   compress(str [,<gzip/deflate>])
+-   uncompress(str [,<gzip/inflate>])
 
  **os functions** 
 -   os.version()
