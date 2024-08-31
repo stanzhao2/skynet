@@ -656,10 +656,6 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
   lua_getglobal(L, "os");
   luaL_setfuncs(L, methods, 0);
   lua_pop(L, 1); /* pop 'os' from stack */
-
-  if (!watcher_ios) {
-    watcher_ios = lua_service()->id();
-  }
   check_timeout();
   return 0;
 }
