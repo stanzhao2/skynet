@@ -48,7 +48,7 @@ SKYNET_API int main(int argc, const char* argv[]) {
     lua_State* L = lua_local();
     skynet_main(L, argc - 1, argv + 1);
     lua_close(L);
-    printf("%s has exited.\n\n", progname);
+    printf("%s has exits normally.\n\n", progname);
   }
   return 0;
 }

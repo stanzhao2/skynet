@@ -6,8 +6,8 @@
 
 /********************************************************************************/
 
-#define sizeof_array 64
-#define sizeof_cache 4096
+#define sizeof_array 1024
+#define sizeof_cache (sizeof(size_t) * 4096)
 
 #define sizeof_pointer sizeof(void*)
 #define skynet_min(a, b) ((a) < (b) ? (a) : (b))
