@@ -33,24 +33,27 @@ end
 --------------------------------------------------------------------------------
 
 function co_class:__gc()
-  coroutine.close(self.co);
+  if self.co then
+    coroutine.close(self.co);
+    self.co = nil;
+  end
 end
 
 --------------------------------------------------------------------------------
 
-function co_class:close(func)
-  assert(func == nil or type(func) == "function");
-  self.closed = func;
-  if coroutine.status(self.co) == "suspended" and self.tasklist.empty() then
-    os.post(coroutine.resume, self.co);
-  end
+function co_class:close(callback)
+  assert(callback == nil or type(callback) == "function");
+  if not self.closed then
+    self.closed = true;
+    self:dispatch(callback or function() end);
+  end   
 end
 
 --------------------------------------------------------------------------------
 
 function co_class:comain()
   while true do
-    if self.tasklist:size() == 0 then
+    if self.tasklist:empty() then
       if self.closed then
         break;
       end
@@ -59,9 +62,6 @@ function co_class:comain()
       print_if_error(self.name, pcall(self.tasklist:front()));
       self.tasklist:pop_front();
     end
-  end
-  if self.closed then
-    os.post(self.closed, self);
   end
 end
 
