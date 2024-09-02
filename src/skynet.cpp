@@ -6,17 +6,21 @@
 /***********************************************************************************/
 
 static void copyright(const char* filename) {
-  printf("%s %s\n", filename, __TIMESTAMP__);
-  printf("Copyright iccgame.com, All right reserved\n");
-  printf("\nDependent Libraries:\n");
+#ifdef _MSC_VER
+  const char* platform = "windows";
+#else
+  const char* platform = "linux";
+#endif
+  printf("%s for %s release v%s\n", filename, platform, SKYNET_VERSION);
+  printf("...%s\n", LUA_RELEASE);
 #ifdef STDNET_USE_DEFLATE
-  printf("... [zlib %s]\n", ZLIB_VERSION);
+  printf("...zlib %s\n", ZLIB_VERSION);
 #endif
-  printf("... [%s]\n", LUA_RELEASE);
 #ifdef STDNET_USE_OPENSSL
-  printf("... [%s]\n", OPENSSL_VERSION_TEXT);
+  printf("...%s\n", OPENSSL_VERSION_TEXT);
 #endif
-  printf("\nUsage: %s lua-module-name [...]\n", filename);
+  printf("\n");
+  printf("Usage: %s lua-module [...]\n", filename);
   printf("\n");
 }
 
