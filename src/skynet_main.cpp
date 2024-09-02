@@ -81,7 +81,6 @@ SKYNET_API void skynet_main(lua_State* L, int argc, const char* argv[]) {
     lua_ferror("%s\n", luaL_checkstring(L, -1));
   }
   local->signal().clear();
-  local->restart();
 }
 
 /***********************************************************************************/

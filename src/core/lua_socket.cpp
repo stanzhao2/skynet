@@ -186,7 +186,7 @@ struct lua_socket final {
     auto self = __this(L);
     const char* host = luaL_checkstring(L, 2);
     unsigned short port = (unsigned short)luaL_checkinteger(L, 3);
-    if (lua_isnone(L, 4)) {
+    if (lua_isnoneornil(L, 4)) {
       error_code ec;
       sync_connect(self->socket, host, port, ec);
       lua_pushboolean(L, ec ? 0 : 1);
@@ -248,7 +248,7 @@ struct lua_socket final {
   }
   static int receive(lua_State* L) {
     auto self = __this(L);
-    if (lua_isnone(L, 2)) {
+    if (lua_isnoneornil(L, 2)) {
       error_code ec;
       std::string out;
       self->socket->receive(out, ec);
@@ -290,7 +290,7 @@ struct lua_socket final {
     auto name = lua_typename(L, lua_type(L, 2));
     size_t size = 0;
     const char* data = luaL_checklstring(L, 2, &size);
-    if (lua_isnone(L, 3)) {
+    if (lua_isnoneornil(L, 3)) {
       error_code ec;
       size = self->socket->send(data, size, ec);
       lua_pushinteger(L, (lua_Integer)size);

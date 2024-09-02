@@ -76,7 +76,7 @@
 -   socket:connect(host, port [, func])
 -   socket:close()
 -   socket:id()
--   socket:send(data)
+-   socket:send(data [,func])
 -   socket:receive(func)
 -   socket:endpoint([<"local"/"remote">])
 -   socket:geturi()
@@ -100,11 +100,11 @@
 -   timer:cancel()
 
  **string functions**
--   string.split(s, seq)
--   string.trim(s)
--   string.icmp(a, b)
--   string.isalpha(s)
--   string.isalnum(s)
+-   string.split(str, seq)
+-   string.trim(str)
+-   string.icmp(str1, str2)
+-   string.isalpha(str)
+-   string.isalnum(str)
 
  **storage functions**
 -   storage.exist(key)
@@ -117,7 +117,7 @@
 -   storage.clear()
 
  **json functions** 
--   json.encode(tab)
+-   json.encode(value)
 -   json.decode(str)
 
  **base64 functions** 
