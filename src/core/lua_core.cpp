@@ -214,7 +214,14 @@ static int os_id(lua_State* L) {
 }
 
 static int os_name(lua_State* L) {
-  lua_getglobal(L, "progname");
+  lua_getglobal(L, "__progname");
+  return 1;
+}
+
+static int os_getcwd(lua_State* L) {
+  char dir[MAX_PATH];
+  const char* path = getcwd(dir, sizeof(dir));
+  lua_pushstring(L, path);
   return 1;
 }
 
@@ -310,6 +317,7 @@ SKYNET_API int luaopen_core(lua_State* L) {
     { "dirsep",     os_dirsep     },
     { "debugging",  os_debugging  },
     { "wait",       os_wait       },
+    { "getcwd",     os_getcwd     },
     { "id",         os_id         },
     { "name",       os_name       },
     { "processors", os_processors },

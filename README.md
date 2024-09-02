@@ -26,6 +26,7 @@
 -   os.caller()
 -   os.responser()
 -   os.compile(fname [, oname])
+-   os.getcwd()
 -   os.name()
 -   os.timer() #2
 -   os.dirsep()

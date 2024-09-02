@@ -49,7 +49,7 @@ SKYNET_API int lua_dofile(lua_State* L) {
   lua_pushstring(L, filename);
   lua_replace(L, 1);
   lua_pushvalue(L, 1);
-  lua_setglobal(L, "progname");
+  lua_setglobal(L, "__progname");
 
   service_hold hold;
 
