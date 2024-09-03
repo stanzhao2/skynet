@@ -114,6 +114,9 @@
     <ClCompile Include="..\src\extend\lua_compile.cpp">
       <Filter>源文件\extend</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\extend\lua_directory.cpp">
+      <Filter>源文件\extend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\skynet.h">
@@ -189,6 +192,9 @@
       <Filter>源文件\core</Filter>
     </ClInclude>
     <ClInclude Include="..\src\extend\lua_compile.h">
+      <Filter>源文件\extend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\extend\lua_directory.h">
       <Filter>源文件\extend</Filter>
     </ClInclude>
   </ItemGroup>

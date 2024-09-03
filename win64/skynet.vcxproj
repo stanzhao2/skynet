@@ -26,6 +26,7 @@
     <ClCompile Include="..\src\extend\http\parser.cpp" />
     <ClCompile Include="..\src\extend\lua_compile.cpp" />
     <ClCompile Include="..\src\extend\lua_deflate.cpp" />
+    <ClCompile Include="..\src\extend\lua_directory.cpp" />
     <ClCompile Include="..\src\extend\lua_http.cpp" />
     <ClCompile Include="..\src\extend\lua_json.cpp" />
     <ClCompile Include="..\src\extend\lua_list.cpp" />
@@ -57,6 +58,7 @@
     <ClInclude Include="..\src\extend\http\parser.h" />
     <ClInclude Include="..\src\extend\lua_compile.h" />
     <ClInclude Include="..\src\extend\lua_deflate.h" />
+    <ClInclude Include="..\src\extend\lua_directory.h" />
     <ClInclude Include="..\src\extend\lua_http.h" />
     <ClInclude Include="..\src\extend\lua_json.h" />
     <ClInclude Include="..\src\extend\lua_list.h" />

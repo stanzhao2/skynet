@@ -28,6 +28,7 @@
 -   os.compile(fname [, oname])
 -   os.getcwd()
 -   os.name()
+-   os.coroutine() #7
 -   os.timer() #2
 -   os.dirsep()
 -   os.mkdir(name)
@@ -41,6 +42,10 @@
 -   os.stop()
 -   os.stopped()
 -   os.debugging()
+
+ **coroutine functions**
+-   co:close(func)
+-   co:dispatch(func)
 
  **std functions**
 -   std.list() #3
@@ -153,3 +158,4 @@
 -  _#4: return socket object
 -  _#5: return server object
 -  _#6: return ssl context object
+-  _#7: return coroutine object

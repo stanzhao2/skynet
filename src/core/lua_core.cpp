@@ -42,94 +42,6 @@ static int openlibs(lua_State* L, const lua_CFunction f[]) {
 
 /********************************************************************************/
 
-struct directory final {
-  inline static const char* name() {
-    return "lua folder";
-  }
-  inline static directory* __this(lua_State* L) {
-    return checkudata<directory>(L, 1, name());
-  }
-  static int __gc(lua_State* L) {
-    auto self = __this(L);
-    self->close(L);
-    self->~directory();
-    return 0;
-  }
-  static int close(lua_State* L) {
-    auto self = __this(L);
-    if (!self->closed) {
-      tinydir_close(&self->tdir);
-    }
-    self->closed = true;
-    return 0;
-  }
-  inline static int pairs(lua_State* L) {
-    auto self = __this(L);
-    lua_pushlightuserdata(L, self);
-    lua_pushcclosure(L, iterator, 1);
-    return 1;
-  }
-  inline static int iterator(lua_State* L) {
-    auto self = (directory*)lua_touserdata(L, lua_upvalueindex(1));
-    while (!self->closed) {
-      if (!self->tdir.has_next) {
-        break;
-      }
-      tinydir_file file;
-      tinydir_readfile(&self->tdir, &file);
-      tinydir_next(&self->tdir);
-      auto filename = UTF8(file.name);
-      if (filename != "." && filename != "..") {
-        lua_pushlstring(L, filename.c_str(), filename.size());
-        lua_pushboolean(L, file.is_dir);
-        return 2;
-      }
-    }
-    return 0;
-  }
-  static int open(lua_State* L) {
-    const char* dir = luaL_optstring(L, 1, "." LUA_DIRSEP);
-    std::string path = UTF8(dir);
-    auto self = newuserdata<directory>(L, name());
-    if (tinydir_open(&self->tdir, path.c_str()) < 0) {
-      lua_pushnil(L);
-    }
-    return 1;
-  }
-  static void init_metatable(lua_State* L) {
-    const luaL_Reg methods[] = {
-      { "__gc",     __gc    },
-      { "__pairs",  pairs   },
-      { "close",    close   },
-      { NULL,       NULL    }
-    };
-    newmetatable(L, name(), methods);
-    lua_pop(L, 1);
-  }
-  static int make(lua_State* L) {
-    const char* name = luaL_checkstring(L, 1);
-    auto ok = make_dir(name);
-    lua_pushboolean(L, ok ? 1 : 0);
-    return 1;
-  }
-  static int open_library(lua_State* L) {
-    init_metatable(L);
-    const luaL_Reg methods[] = {
-      { "mkdir",      make  },
-      { "opendir",    open  },
-      { NULL,         NULL  }
-    };
-    lua_getglobal(L, "os");
-    luaL_setfuncs(L, methods, 0);
-    lua_pop(L, 1); /* pop 'os' from stack */
-    return 0;
-  }
-  tinydir_dir tdir;
-  bool closed = false;
-};
-
-/********************************************************************************/
-
 struct global final {
   static int check_access(lua_State* L) {
     lua_Debug ar;
@@ -167,6 +79,124 @@ struct global final {
     lua_pop(L, 1);
     return 0;
   }
+};
+
+/********************************************************************************/
+
+#define is_yieldable(s) (s == LUA_OK || s == LUA_YIELD)
+#define yieldk(L, n, ctx, f) lua_yieldk(L, n, (lua_KContext)ctx, f)
+
+struct lua_coroutine final {
+  inline static const char* name() {
+    return "lua coroutine";
+  }
+  static int co_next(
+    lua_State* L, int status, lua_KContext ctx) {
+    auto self = (lua_coroutine*)ctx;
+    while (is_yieldable(status)) {
+      if (self->task.empty()) {
+        if (self->closed) {
+          break;
+        }
+        yieldk(L, 0, self, co_next);
+        continue;
+      }
+      int ref = self->task.front();
+      lua_pushref(L, ref);
+      if (lua_pcall(L, 0, 0) != LUA_OK) {
+        lua_ferror("%s\n", luaL_checkstring(L, -1));
+      }
+      lua_unref(L, ref);
+      self->task.pop_front();
+    }
+    return 0;
+  }
+  inline static lua_coroutine* __this(
+    lua_State* L, int index = 1) {
+    return checkudata<lua_coroutine>(L, index, name());
+  }
+  inline static int co_main(lua_State* L) {
+    auto self = __this(L, lua_upvalueindex(1));
+    return co_next(L, 0, (lua_KContext)self);
+  }
+  static int __gc(lua_State* L) {
+    auto self = __this(L);
+    auto iter = self->task.begin();
+    for (; iter != self->task.end(); ++iter) {
+      lua_unref(L, *iter);
+    }
+    self->task.clear();
+    if (self->coL) {
+      lua_unref(L, self->colref);
+      lua_closethread(self->coL, L);
+    }
+    self->~lua_coroutine();
+    return 0;
+  }
+  static int close(lua_State* L) {
+    auto self = __this(L);
+    if (!self->closed) {
+      if (lua_isnone(L, 2)) {
+        lua_pushcfunction(L, [](lua_State*) { return 0; });
+      }
+      dispatch(L);
+      self->closed = true;
+    }
+    return 0;
+  }
+  static int dispatch(lua_State* L) {
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+    auto self = __this(L);
+    if (self->closed) {
+      return 0;
+    }
+    self->task.push_back(lua_ref(L, 2));
+    if (self->task.size() > 1) {
+      return 0;
+    }
+    int yields = 0;
+    if (is_yieldable(lua_status(self->coL))) {
+      lua_resume(self->coL, L, 0, &yields);
+    }
+    return 0;
+  }
+  static void init_metatable(lua_State* L) {
+    const luaL_Reg methods[] = {
+      { "__gc",     __gc      },
+      { "close",    close     },
+      { "dispatch", dispatch  },
+      { NULL,         NULL    }
+    };
+    newmetatable(L, name(), methods);
+    lua_pop(L, 1);
+  }
+  static int create(lua_State* L) {
+    auto self = newuserdata<lua_coroutine>(L, name());
+    self->closed = false;
+    self->coL    = lua_newthread(L);
+    self->colref = lua_ref(L, -1);
+    lua_pop(L, 1);
+
+    lua_pushvalue(L, 1);
+    lua_pushcclosure(L, co_main, 1);
+    lua_xmove(L, self->coL, 1);  /* move function from L to NL */
+    return 1;
+  }
+  static int open_library(lua_State* L) {
+    init_metatable(L);
+    const luaL_Reg methods[] = {
+      { "coroutine",  create  },
+      { NULL,         NULL    }
+    };
+    lua_getglobal(L, "os");
+    luaL_setfuncs(L, methods, 0);
+    lua_pop(L, 1); /* pop 'os' from stack */
+    return 0;
+  }
+  bool closed = false;
+  int  colref = 0;
+  lua_State* coL = nullptr;
+  std::list<int> task;
 };
 
 /********************************************************************************/
@@ -310,7 +340,7 @@ SKYNET_API int luaopen_core(lua_State* L) {
     main_service = io::service::local();
   }
   global::open_library(L);
-  directory::open_library(L);
+  lua_coroutine::open_library(L);
   const luaL_Reg methods[] = {
     { "version",    os_version    },
     { "clock",      os_clock      },
@@ -326,9 +356,7 @@ SKYNET_API int luaopen_core(lua_State* L) {
     { "stopped",    os_stopped    },
     { "post",       os_post       },
     { "restart",    os_restart    },
-    { "mkdir",      directory::make },
-    { "opendir",    directory::open },
-    { NULL,         NULL            }
+    { NULL,         NULL          }
   };
   lua_getglobal(L, "os");
   luaL_setfuncs(L, methods, 0);

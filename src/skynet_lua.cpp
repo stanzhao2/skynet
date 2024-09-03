@@ -13,6 +13,7 @@
 #include "extend/lua_openssl.h"
 #include "extend/lua_string.h"
 #include "extend/lua_storage.h"
+#include "extend/lua_directory.h"
 
 /********************************************************************************/
 
@@ -27,6 +28,7 @@ static const lua_CFunction skynet_modules[] = {
   luaopen_crypto,       /* crypto.sha1 ... */
   luaopen_lstring,      /* string.split    */
   luaopen_storage,      /*  */
+  luaopen_directory,    /* os.mkdir, os.opendir */
   NULL
 };
 
