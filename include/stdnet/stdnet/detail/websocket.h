@@ -285,11 +285,17 @@ namespace detail {
         if (!ws::check_response(res, req)) {
           ec = STDNET_ERROR;
         }
+        else {
+          set_timeout(TRUST_TIMEOUT);
+        }
       }
       else {
         read_request(ec);
         ws::init_response(101, res, req);
         send_response(ec);
+        if (!ec) {
+          set_timeout(TRUST_TIMEOUT);
+        }
       }
       if (!ec) {
         _handshaked = true;

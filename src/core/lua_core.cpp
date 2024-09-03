@@ -84,29 +84,39 @@ struct global final {
 /********************************************************************************/
 
 #define is_yieldable(s) (s == LUA_OK || s == LUA_YIELD)
-#define yieldk(L, n, ctx, f) lua_yieldk(L, n, (lua_KContext)ctx, f)
+#define lua_co_yield(L, n, ctx, f) lua_yieldk(L, n, (lua_KContext)ctx, f)
+#define lua_co_pcall(L, n, ctx, f) lua_pcallk(L, n, 0, 0, (lua_KContext)ctx, f)
 
 struct lua_coroutine final {
+  struct co_task {
+    int handler;
+    int invoked;
+  };
   inline static const char* name() {
     return "lua coroutine";
   }
   static int co_next(
     lua_State* L, int status, lua_KContext ctx) {
     auto self = (lua_coroutine*)ctx;
-    while (is_yieldable(status)) {
+    while (true) {
       if (self->task.empty()) {
         if (self->closed) {
           break;
         }
-        yieldk(L, 0, self, co_next);
+        lua_co_yield(L, 0, self, co_next);
         continue;
       }
-      int ref = self->task.front();
-      lua_pushref(L, ref);
-      if (lua_pcall(L, 0, 0) != LUA_OK) {
+      auto& task = self->task.front();
+      if (!is_yieldable(status)) {
         lua_ferror("%s\n", luaL_checkstring(L, -1));
+        lua_pop(L, 1);
       }
-      lua_unref(L, ref);
+      else if (!task.invoked) {
+        task.invoked = 1;
+        lua_pushref(L, task.handler);
+        lua_co_pcall(L, 0, self, co_next);
+      }
+      lua_unref(L, task.handler);
       self->task.pop_front();
     }
     return 0;
@@ -123,7 +133,8 @@ struct lua_coroutine final {
     auto self = __this(L);
     auto iter = self->task.begin();
     for (; iter != self->task.end(); ++iter) {
-      lua_unref(L, *iter);
+      auto& task = *iter;
+      lua_unref(L, task.handler);
     }
     self->task.clear();
     if (self->coL) {
@@ -150,7 +161,10 @@ struct lua_coroutine final {
     if (self->closed) {
       return 0;
     }
-    self->task.push_back(lua_ref(L, 2));
+    co_task task;
+    task.handler = lua_ref(L, 2);
+    task.invoked = 0;
+    self->task.push_back(task);
     if (self->task.size() > 1) {
       return 0;
     }
@@ -193,10 +207,11 @@ struct lua_coroutine final {
     lua_pop(L, 1); /* pop 'os' from stack */
     return 0;
   }
-  bool closed = false;
-  int  colref = 0;
+  std::list<co_task> task;
+  int  colref    = 0;
+  bool pending   = false;
+  bool closed    = false;
   lua_State* coL = nullptr;
-  std::list<int> task;
 };
 
 /********************************************************************************/

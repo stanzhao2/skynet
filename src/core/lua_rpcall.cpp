@@ -111,11 +111,14 @@ static void cancel_invoke(int rcf, size_t sn) {
     if (lua_status(coL) != LUA_YIELD) {
       return;
     }
-    int argc = 2, nret = 0;
+    int nret = 0;
     lua_pushboolean(coL, 0); /* false */
     lua_pushstring(coL, "timeout");
-    int state = lua_resume(coL, L, argc, &nret);
-    lua_pop(coL, nret);
+    int state = lua_resume(coL, L, 2, &nret);
+    if (nret > 0) {
+      lua_xmove(coL, L, nret);
+      lua_pop(L, nret);
+    }
     return;
   }
   if (typeof_ref == LUA_TFUNCTION) {
@@ -161,8 +164,12 @@ static void back_to_local(const std::string& data, int rcf, size_t sn) {
     }
     lua_pushlstring(coL, data.c_str(), data.size());
     int argc  = lua_unwrap(coL);
-    int state = lua_resume(coL, L, argc, &argc);
-    lua_pop(coL, argc);
+    int nret  = 0;
+    int state = lua_resume(coL, L, argc, &nret);
+    if (nret > 0) {
+      lua_xmove(coL, L, nret);
+      lua_pop(L, nret);
+    }
     return;
   }
   if (typeof_ref == LUA_TFUNCTION) {

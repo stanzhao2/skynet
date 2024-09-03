@@ -124,21 +124,21 @@ local function on_lookout(info)
 	lua_bind(info, info.caller);
     sendto_others(wrap(info));
 	return;
-  end  
+  end
   if what == proto_type.unbind then
 	lua_unbind(info.name, info.caller);
     sendto_others(wrap(info));
 	return;
-  end  
+  end
   local id;
   if what == proto_type.deliver then
     id = info.who & 0xffff;
 	info.who = info.who >> 16;
-  end  
+  end
   if what == proto_type.response then
     id = info.caller & 0xffff;
 	info.caller = info.caller >> 16;
-  end  
+  end
   local session = active_sessions[id];
   if session then
     sendto_member(wrap(info), session);
@@ -231,7 +231,6 @@ local function connect_members(socket, protocol)
       error(format("socket connect to %s:%d error", host, port));
 	  return false;
 	end
-    os.wait(0);
   end
   return true;
 end

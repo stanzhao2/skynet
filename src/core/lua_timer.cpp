@@ -13,6 +13,7 @@ struct class_timer final {
       std::chrono::milliseconds(timeout)
     );
     _timer.async_wait([=](const error_code& ec) {
+      lua_State* L = lua_local();
       lua_auto_revert revert(L);
       lua_auto_unref  unref(L, handler);
       if (ec) {
