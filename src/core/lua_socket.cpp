@@ -174,7 +174,17 @@ struct lua_socket final {
   static int get_header(lua_State* L) {
     auto self = __this(L);
     const char* name = luaL_checkstring(L, 2);
-    auto value = self->socket->request_header().get_header(name);
+    const std::string what = luaL_optstring(L, 3, "request");
+    std::string value;
+    if (what == "request") {
+      value = self->socket->request_header().get_header(name);
+    }
+    else if (what == "response") {
+      value = self->socket->response_header().get_header(name);
+    }
+    else {
+      luaL_error(L, "invalid type: %s", what.c_str());
+    }
     if (value.empty()) {
       lua_pushnil(L);
     } else {

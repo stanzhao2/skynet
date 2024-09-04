@@ -1,5 +1,5 @@
  **skynet-lua usage**
--   skynet name [arguments...]
+-   skynet name [...]
 
  **skynet cluster**
 -   skynet cluster.leader [port] [host]
@@ -13,13 +13,13 @@
 -   throw(...)
 -   wrap(...)
 -   unwrap(str)
--   compress(str [,<gzip/deflate>])
--   uncompress(str [,<gzip/inflate>])
+-   compress(str [,<"deflate">/<"gzip">])
+-   uncompress(str [,<"deflate">/<"gzip">])
 
  **os functions** 
 -   os.version()
 -   os.pload(name [, ...]) #1
--   os.declare(name, func [, <true/false>])
+-   os.declare(name, func [, <true>/<false>])
 -   os.undeclare(name)
 -   os.rpcall([func, ] name [, ...])
 -   os.deliver(name, mask, receiver [, ...])
@@ -86,9 +86,9 @@
 -   socket:write(data)
 -   socket:send(data [,func])
 -   socket:receive(func)
--   socket:endpoint([<"local"/"remote">])
+-   socket:endpoint([<"remote">/<"local">])
 -   socket:geturi()
--   socket:getheader(name)
+-   socket:getheader(name [,<"request">/<"response">])
 -   socket:seturi(uri)
 -   socket:setheader(name, value)
 
