@@ -161,6 +161,14 @@ local function new_session(peer)
   local id = peer:id();
   active_sessions[id] = session;
   peer:receive(bind(ws_on_receive, peer));
+
+  for caller, bounds in pairs(lua_bounds) do
+    if caller <= 0xffff then
+	  for name, info in pairs(bounds) do
+	    peer:send(wrap(info));
+      end
+	end
+  end
   return true;
 end
 
@@ -184,14 +192,6 @@ local function ws_on_accept(peer, ec)
   end
   if not new_session(peer) then
     peer:close();
-	return;
-  end
-  for caller, bounds in pairs(lua_bounds) do
-    if caller <= 0xffff then
-	  for name, info in pairs(bounds) do
-	    peer:send(wrap(info));
-	  end
-	end
   end
 end
 
@@ -231,6 +231,7 @@ local function connect_members(socket, protocol)
       error(format("socket connect to %s:%d error", host, port));
 	  return false;
 	end
+    os.wait(0);
   end
   return true;
 end
