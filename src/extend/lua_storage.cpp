@@ -17,6 +17,14 @@ struct pcall_context {
 };
 
 static int finishpcall(lua_State *L, int status, lua_KContext extra) {
+  auto context = (pcall_context*)extra;
+  class __delete {
+    pcall_context* _ctx;
+  public:
+    inline  __delete(pcall_context* ctx) : _ctx(ctx) {}
+    inline ~__delete() { delete _ctx; }
+  } auto_delete(context);
+
   if (luai_unlikely(status != LUA_OK && status != LUA_YIELD)) {  /* error? */
     lua_error(L);
   }
@@ -25,10 +33,9 @@ static int finishpcall(lua_State *L, int status, lua_KContext extra) {
     lua_pushnil(L);
     return 2;
   }
-  auto ctx = (pcall_context*)extra;
-  int  top = ctx->top;
-  auto key = ctx->key;
-  auto old_value = ctx->old_value;
+  int top = context->top;
+  std::string key = context->key;
+  std::string old_value = std::move(context->old_value);
 
   lua_settop(L, top);
   lua_wrap(L, top - 2);
@@ -38,12 +45,10 @@ static int finishpcall(lua_State *L, int status, lua_KContext extra) {
   if (old_value.empty()) {
     lua_pushboolean(L, 1);
     lua_pushnil(L);
-    delete ctx;
     return 2;
   }
   lua_pushboolean(L, 1);
   lua_pushlstring(L, old_value.c_str(), old_value.size());
-  delete ctx;
   return lua_unwrap(L) + 1;
 }
 
@@ -102,7 +107,7 @@ static int luac_set_if(lua_State* L) {
   }
   ctx->key = key;
   ctx->top = top;
-  ctx->old_value = old_value;
+  ctx->old_value = std::move(old_value);
   int status = lua_pcall_k(L, argc, 1, ctx, finishpcall);
   return finishpcall(L, status, (lua_KContext)ctx);
 }
