@@ -489,8 +489,7 @@ static int luac_rpcall(lua_State* L) {
     data = luaL_checklstring(L, -1, &size);
   }
   auto sn = next_sn();
-  auto executor = lua_service();
-  int  caller = executor->id();
+  int  caller = lua_service()->id();
   int  rcf = 0 - caller;
   /* if invoke by coroutine */
   if (lua_isyieldable(L)) {
@@ -517,12 +516,13 @@ static int luac_rpcall(lua_State* L) {
   }
   /* call will be blocked */
   std::string rpcall_ret;
-  executor->set_context(&rpcall_ret);
-  bool result = executor->wait_for(max_expires);
+  auto service = lua_service();
+  service->set_context(&rpcall_ret);
+  bool result = service->wait_for(max_expires);
   remove_of_pending(sn);
-  executor->set_context(nullptr);
+  service->set_context(nullptr);
 
-  if (executor->stopped()) {
+  if (service->stopped()) {
     lua_pushboolean(L, 0); /* false */
     lua_pushstring(L, "cancel");
     return 2;
