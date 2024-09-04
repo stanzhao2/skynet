@@ -39,7 +39,7 @@ static int finishpcall(lua_State *L, int status, lua_KContext extra) {
     return 2;
   }
   int top = context->top;
-  std::string key = context->key;
+  std::string key = std::move(context->key);
   std::string old_value = std::move(context->old_value);
 
   lua_settop(L, top);
@@ -83,10 +83,8 @@ static int luac_set(lua_State* L) {
 }
 
 static int luac_set_if(lua_State* L) {
-  std::string old_value;
-  std::string key = luaL_checkstring(L, 1);
+  const char* name = luaL_checkstring(L, 1);
   luaL_checktype(L, 2, LUA_TFUNCTION);
-
   int top = lua_gettop(L);
   if (top < 3) {
     luaL_error(L, "no values");
@@ -102,17 +100,16 @@ static int luac_set_if(lua_State* L) {
     lua_pushnil(L);
     return 2;
   }
-  auto iter = _storage.find(key);
+  ctx->key = name;
+  ctx->top = top;
+  auto iter = _storage.find(ctx->key);
   if (iter != _storage.end()) {
-    old_value = iter->second;
+    ctx->old_value = iter->second;
   }
-  if (!old_value.empty()) {
-    lua_pushlstring(L, old_value.c_str(), old_value.size());
+  if (!ctx->old_value.empty()) {
+    lua_pushlstring(L, ctx->old_value.c_str(), ctx->old_value.size());
     argc += lua_unwrap(L);
   }
-  ctx->key = key;
-  ctx->top = top;
-  ctx->old_value = std::move(old_value);
   int status = lua_pcall_k(L, argc, 1, ctx, finishpcall);
   return finishpcall(L, status, (lua_KContext)ctx);
 }
