@@ -135,14 +135,14 @@ static void cancel_block(const std::string& data, int rcf, size_t sn) {
   if (rcf == 0) {
     return;
   }
-  auto executor = find_service(std::abs(rcf));
-  if (!executor) {
+  auto service = find_service(std::abs(rcf));
+  if (!service) {
     return;
   }
-  std::string* pcontext = (std::string*)executor->get_context();
+  std::string* pcontext = (std::string*)service->get_context();
   if (pcontext) {
     pcontext->assign(data);
-    executor->cancel();
+    service->cancel();
   }
 }
 
@@ -195,9 +195,9 @@ static int check_timeout() {
       continue;
     }
     auto caller = iter->second.caller;
-    auto executor = find_service(caller);
-    if (executor) {
-      executor->post(_bind(cancel_invoke, rcf, iter->first));
+    auto service = find_service(caller);
+    if (service) {
+      service->post(_bind(cancel_invoke, rcf, iter->first));
     }
   }
   _timer.expires_after(std::chrono::milliseconds(1000));
@@ -211,9 +211,9 @@ static int check_timeout() {
 
 /* back to response of request */
 static void forword(const std::string& data, size_t caller, int rcf, size_t sn) {
-  auto executor = find_service(watcher_ios);
-  if (executor) {
-    executor->post(
+  auto service = find_service(watcher_ios);
+  if (service) {
+    service->post(
       [=]() {
         lua_State* L = lua_local();
         lua_auto_revert revert(L);
@@ -247,9 +247,9 @@ static int forword(const topic_type& topic, const char* data, size_t size, size_
   if (data && size) {
     argv.assign(data, size);
   }
-  auto executor = find_service(watcher_ios);
-  if (executor) {
-    executor->post(
+  auto service = find_service(watcher_ios);
+  if (service) {
+    service->post(
       [=]() {
         lua_State* L = lua_local();
         lua_auto_revert revert(L);
@@ -277,14 +277,14 @@ static int forword(const topic_type& topic, const char* data, size_t size, size_
       }
     );
   }
-  return executor ? 1 : 0;
+  return service ? 1 : 0;
 }
 
 /* send bind or unbind request */
 static int dispatch(const topic_type& topic, const std::string& what, int rcb, size_t caller) {
-  auto executor = find_service(watcher_ios);
-  if (executor) {
-    executor->post(
+  auto service = find_service(watcher_ios);
+  if (service) {
+    service->post(
       [=]() {
         lua_State* L = lua_local();
         lua_auto_revert revert(L);
@@ -304,7 +304,7 @@ static int dispatch(const topic_type& topic, const std::string& what, int rcb, s
       }
     );
   }
-  return executor ? 1 : 0;
+  return service ? 1 : 0;
 }
 
 static int response(const char* data, size_t size, size_t caller, int rcf, size_t sn) {
@@ -349,11 +349,11 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
   if (data && size) {
     argv.assign(data, size);
   }
-  auto executor = find_service((int)who);
-  if (!executor) {
+  auto service = find_service((int)who);
+  if (!service) {
     return 0;
   }
-  executor->post(
+  service->post(
     [=]() {
       lua_State* L = lua_local();
       lua_auto_revert revert(L);
@@ -729,16 +729,16 @@ SKYNET_API int lua_r_bind(const char* name, size_t who, int rcb, int opt) {
 SKYNET_API int lua_r_response(const std::string& data, size_t caller, int rcf, size_t sn) {
   if (is_local(caller)) {
     if (rcf < 0) {
-      auto executor = find_service(std::abs(rcf));
-      if (executor) {
-        executor->post(_bind(cancel_block, data, rcf, sn));
+      auto service = find_service(std::abs(rcf));
+      if (service) {
+        service->post(_bind(cancel_block, data, rcf, sn));
         return LUA_OK;
       }
     }
     else {
-      auto executor = find_service((int)caller);
-      if (executor) {
-        executor->post(_bind(back_to_local, data, rcf, sn));
+      auto service = find_service((int)caller);
+      if (service) {
+        service->post(_bind(back_to_local, data, rcf, sn));
         return LUA_OK;
       }
     }

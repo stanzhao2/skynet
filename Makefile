@@ -40,6 +40,7 @@ SOURCE  := src/core/lua_bind.o \
 		   src/extend/rapidjson/values.o \
 		   src/extend/lua_compile.o \
 		   src/extend/lua_deflate.o \
+		   src/extend/lua_directory.o \
 		   src/extend/lua_http.o \
 		   src/extend/lua_json.o \
 		   src/extend/lua_list.o \

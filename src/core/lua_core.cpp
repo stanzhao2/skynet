@@ -304,8 +304,8 @@ static int os_post(lua_State* L) {
     params.push_back(lua_ref(L, i));
   }
 
-  auto executor = lua_service();
-  executor->post([handler, params]() {
+  auto service = lua_service();
+  service->post([handler, params]() {
     lua_State* L = lua_local();
     lua_auto_revert revert(L);
     lua_auto_unref  unref(L, handler);
