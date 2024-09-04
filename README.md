@@ -82,6 +82,8 @@
 -   socket:connect(host, port [, func])
 -   socket:close()
 -   socket:id()
+-   socket:read()
+-   socket:write(data)
 -   socket:send(data [,func])
 -   socket:receive(func)
 -   socket:endpoint([<"local"/"remote">])

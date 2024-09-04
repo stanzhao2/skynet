@@ -214,10 +214,10 @@ end
 
 local function connect_members(socket, protocol)
   while true do
-    local data = socket:receive();
+    local data = socket:read();
 	if not data then
 	  return false;
-	end    
+	end
 	local packet = unwrap(data);
 	if packet.what == proto_type.ready then
 	  break;

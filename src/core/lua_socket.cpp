@@ -246,21 +246,22 @@ struct lua_socket final {
     lua_pushstring(L, "unknown type");
     return 2;
   }
-  static int receive(lua_State* L) {
+  static int read(lua_State* L) {
+    error_code ec;
     auto self = __this(L);
-    if (lua_isnoneornil(L, 2)) {
-      error_code ec;
-      std::string out;
-      self->socket->receive(out, ec);
-      if (ec) {
-        lua_pushnil(L);
-        push_errcode(L, ec);
-        return 2;
-      }
-      lua_pushlstring(L, out.c_str(), out.size());
-      return 1;
+    std::string out;
+    self->socket->receive(out, ec);
+    if (ec) {
+      lua_pushnil(L);
+      push_errcode(L, ec);
+      return 2;
     }
+    lua_pushlstring(L, out.c_str(), out.size());
+    return 1;
+  }
+  static int receive(lua_State* L) {
     luaL_checktype(L, 2, LUA_TFUNCTION);
+    auto self = __this(L);
     int handler = lua_ref(L, 2);
     async_receive(self->socket,
       [handler](const error_code& ec, const char* data, size_t size) {
@@ -285,22 +286,26 @@ struct lua_socket final {
     );
     return 0;
   }
+  static int write(lua_State* L) {
+    error_code ec;
+    auto self = __this(L);
+    size_t size = 0;
+    const char* data = luaL_checklstring(L, 2, &size);
+    size = self->socket->send(data, size, ec);
+    lua_pushinteger(L, (lua_Integer)size);
+    if (ec) push_errcode(L, ec);
+    return ec ? 2 : 1;
+  }
   static int send(lua_State* L) {
     auto self = __this(L);
-    auto name = lua_typename(L, lua_type(L, 2));
     size_t size = 0;
     const char* data = luaL_checklstring(L, 2, &size);
     if (lua_isnoneornil(L, 3)) {
-      error_code ec;
-      size = self->socket->send(data, size, ec);
-      lua_pushinteger(L, (lua_Integer)size);
-      if (ec) {
-        push_errcode(L, ec);
-        return 2;
-      }
-      return 1;
+      lua_pushcfunction(L, [](lua_State*) { return 0; });
     }
-    luaL_checktype(L, 3, LUA_TFUNCTION);
+    else {
+      luaL_checktype(L, 3, LUA_TFUNCTION);
+    }
     int handler = lua_ref(L, 3);
     self->socket->async_send(data, size,
       [handler](const error_code& ec, size_t size) {
@@ -329,6 +334,8 @@ struct lua_socket final {
       { "setheader",    set_header  },
       { "geturi",       get_uri     },
       { "getheader",    get_header  },
+      { "read",         read        },
+      { "write",        write       },
       { "send",         send        },
       { "receive",      receive     },
       { NULL,           NULL        }
