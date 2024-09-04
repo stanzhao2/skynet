@@ -14,6 +14,7 @@
     <ClCompile Include="..\src\core\lua_bind.cpp" />
     <ClCompile Include="..\src\core\lua_core.cpp" />
     <ClCompile Include="..\src\core\lua_dofile.cpp" />
+    <ClCompile Include="..\src\core\lua_global.cpp" />
     <ClCompile Include="..\src\core\lua_path.cpp" />
     <ClCompile Include="..\src\core\lua_pcall.cpp" />
     <ClCompile Include="..\src\core\lua_pload.cpp" />
@@ -46,6 +47,7 @@
     <ClInclude Include="..\src\core\lua_bind.h" />
     <ClInclude Include="..\src\core\lua_core.h" />
     <ClInclude Include="..\src\core\lua_dofile.h" />
+    <ClInclude Include="..\src\core\lua_global.h" />
     <ClInclude Include="..\src\core\lua_path.h" />
     <ClInclude Include="..\src\core\lua_pcall.h" />
     <ClInclude Include="..\src\core\lua_pload.h" />

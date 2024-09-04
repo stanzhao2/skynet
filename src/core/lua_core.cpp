@@ -2,6 +2,7 @@
 
 #include "../skynet.h"
 #include "../skynet_lua.h"
+#include "lua_global.h"
 #include "lua_bind.h"
 #include "lua_dofile.h"
 #include "lua_path.h"
@@ -18,6 +19,7 @@
 
 static const lua_CFunction core_modules[] = {
   luaopen_require,      /* require        */
+  luaopen_global,
   luaopen_print,        /* print, trace, error, throw */
   luaopen_path,         /* path, cpath    */
   luaopen_wrap,         /* wrap, unwrap   */
@@ -39,47 +41,6 @@ static int openlibs(lua_State* L, const lua_CFunction f[]) {
   }
   return 0;
 }
-
-/********************************************************************************/
-
-struct global final {
-  static int check_access(lua_State* L) {
-    lua_Debug ar;
-    if (lua_getstack(L, 1, &ar) == 0) {
-      lua_rawset(L, 1);
-      return 0;
-    }
-    if (lua_getinfo(L, "Sln", &ar) && ar.currentline < 0) {
-      lua_rawset(L, 1);
-      return 0;
-    }
-    const char* name = luaL_checkstring(L, -2);
-    if (lua_isfunction(L, -1)) {
-      if (strcmp(name, nameof_main) == 0) {
-        lua_rawset(L, 1);
-        return 0;
-      }
-    }
-    return luaL_error(L, "Cannot use global variables: %s", name);
-  }
-  static int open_library(lua_State* L) {
-    lua_getglobal(L, LUA_GNAME);
-    lua_getfield(L, -1, "__newindex");
-    if (lua_isfunction(L, -1)) {
-      lua_pop(L, 2);
-      return 0;
-    }
-    lua_pop(L, 1);
-    luaL_newmetatable(L, "placeholders");
-    lua_pushliteral(L, "__newindex");
-    lua_pushcfunction(L, check_access);
-
-    lua_rawset(L, -3);
-    lua_setmetatable(L, -2);
-    lua_pop(L, 1);
-    return 0;
-  }
-};
 
 /********************************************************************************/
 
@@ -353,7 +314,6 @@ SKYNET_API int luaopen_core(lua_State* L) {
   if (!main_service) {
     main_service = io::service::local();
   }
-  global::open_library(L);
   lua_coroutine::open_library(L);
   const luaL_Reg methods[] = {
     { "version",    os_version    },
