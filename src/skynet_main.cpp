@@ -55,7 +55,7 @@ static int pmain(lua_State* L) {
   const char** argv = (const char**)lua_touserdata(L, 2);
   lua_pushcfunction(L, lua_dofile);
   pushargv(L, argc, argv);
-  if (lua_pcall(L, argc, 0) != LUA_OK) {
+  if (lua_pcall(L, argc, 0, 0) != LUA_OK) {
     lua_error(L);
   }
   return 0;
@@ -77,7 +77,7 @@ SKYNET_API void skynet_main(lua_State* L, int argc, const char* argv[]) {
   lua_pushcfunction(L, pmain);
   lua_pushinteger(L, argc);
   lua_pushlightuserdata(L, argv);
-  if (lua_pcall(L, 2, 0) != LUA_OK) {
+  if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
     lua_ferror("%s\n", luaL_checkstring(L, -1));
   }
   local->signal().clear();

@@ -58,7 +58,7 @@ SKYNET_API int lua_dofile(lua_State* L) {
   lua_getfield(L, -1, LUA_SEARCHERS);  /* searchers or loaders */
   lua_rawgeti(L, -1, 2);
   lua_pushvalue(L, 1);
-  int result = lua_pcall(L, 1, LUA_MULTRET);
+  int result = lua_pcall(L, 1, LUA_MULTRET, 0);
   if (result != LUA_OK) {
     lua_error(L);
   }
@@ -66,7 +66,7 @@ SKYNET_API int lua_dofile(lua_State* L) {
   if (retcnt != 2) {
     lua_error(L);
   }
-  result = lua_pcall(L, 1, 0);
+  result = lua_pcall(L, 1, 0, 0);
   if (result != LUA_OK) {
     lua_error(L);
   }
@@ -74,7 +74,7 @@ SKYNET_API int lua_dofile(lua_State* L) {
   lua_getglobal(L, nameof_main);
   if (lua_isfunction(L, -1)) {
     lua_rotate(L, 2, 1);
-    if (lua_pcall(L, top - 1, 0) != LUA_OK) {
+    if (lua_pcall(L, top - 1, 0, 0) != LUA_OK) {
       lua_error(L);
     }
   }

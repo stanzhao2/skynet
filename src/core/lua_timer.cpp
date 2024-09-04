@@ -20,7 +20,7 @@ struct class_timer final {
         return;
       }
       lua_pushref(L, handler);
-      if (lua_pcall(L, 0, 1) != LUA_OK) {
+      if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
         lua_ferror("%s\n", luaL_checkstring(L, -1));
       }
       int what = lua_type(L, -1);

@@ -5,6 +5,13 @@
 
 /********************************************************************************/
 
+static int finishpcall(lua_State *L, int status, lua_KContext extra) {
+  if (luai_unlikely(status != LUA_OK && status != LUA_YIELD)) {  /* error? */
+    lua_error(L);
+  }
+  return lua_gettop(L) - (int)extra;  /* return all results */
+}
+
 static int callback(lua_State* L) {
   int index = lua_upvalueindex(1); /* get the first up-value */
   int up_values = (int)luaL_checkinteger(L, index); /* get the number of up-values */
@@ -16,11 +23,8 @@ static int callback(lua_State* L) {
     lua_rotate(L, 1, up_values - 1); /* rotate the calling parameters after the binding parameters */
   }
   int n = lua_gettop(L) - 1; /* calculate the number of all parameters */
-  int status = lua_pcall(L, n, LUA_MULTRET);
-  if (status != LUA_OK) {
-    lua_error(L);
-  }
-  return lua_gettop(L);
+  int status = lua_pcall_k(L, n, LUA_MULTRET, 0, finishpcall);
+  return finishpcall(L, status, 0);
 }
 
 static int luac_bind(lua_State* L) {

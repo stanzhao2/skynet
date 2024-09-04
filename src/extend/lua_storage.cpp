@@ -10,6 +10,43 @@
 static std::recursive_mutex _mutex;
 static std::map<std::string, std::string> _storage;
 
+struct pcall_context {
+  int top;
+  std::string key;
+  std::string old_value;
+};
+
+static int finishpcall(lua_State *L, int status, lua_KContext extra) {
+  if (luai_unlikely(status != LUA_OK && status != LUA_YIELD)) {  /* error? */
+    lua_error(L);
+  }
+  if (lua_toboolean(L, -1) == 0) {
+    lua_pushboolean(L, 0);
+    lua_pushnil(L);
+    return 2;
+  }
+  auto ctx = (pcall_context*)extra;
+  int  top = ctx->top;
+  auto key = ctx->key;
+  auto old_value = ctx->old_value;
+
+  lua_settop(L, top);
+  lua_wrap(L, top - 2);
+  size_t size = 0;
+  const char* data = luaL_checklstring(L, -1, &size);
+  _storage[key] = std::move(std::string(data, size));
+  if (old_value.empty()) {
+    lua_pushboolean(L, 1);
+    lua_pushnil(L);
+    delete ctx;
+    return 2;
+  }
+  lua_pushboolean(L, 1);
+  lua_pushlstring(L, old_value.c_str(), old_value.size());
+  delete ctx;
+  return lua_unwrap(L) + 1;
+}
+
 /*******************************************************************************/
 
 static int luac_set(lua_State* L) {
@@ -57,30 +94,17 @@ static int luac_set_if(lua_State* L) {
     lua_pushlstring(L, old_value.c_str(), old_value.size());
     argc += lua_unwrap(L);
   }
-  if (lua_pcall(L, argc, 1) != LUA_OK) {
-    lua_ferror("%s\n", luaL_checkstring(L, -1));
+  pcall_context* ctx = new pcall_context();
+  if (!ctx) {
     lua_pushboolean(L, 0);
     lua_pushnil(L);
     return 2;
   }
-  if (lua_toboolean(L, -1) == 0) {
-    lua_pushboolean(L, 0);
-    lua_pushnil(L);
-    return 2;
-  }
-  lua_settop(L, top);
-  lua_wrap(L, top - 2);
-  size_t size = 0;
-  const char* data = luaL_checklstring(L, -1, &size);
-  _storage[key] = std::move(std::string(data, size));
-  if (old_value.empty()) {
-    lua_pushboolean(L, 1);
-    lua_pushnil(L);
-    return 2;
-  }
-  lua_pushboolean(L, 1);
-  lua_pushlstring(L, old_value.c_str(), old_value.size());
-  return lua_unwrap(L) + 1;
+  ctx->key = key;
+  ctx->top = top;
+  ctx->old_value = old_value;
+  int status = lua_pcall_k(L, argc, 1, ctx, finishpcall);
+  return finishpcall(L, status, (lua_KContext)ctx);
 }
 
 static int luac_get(lua_State* L) {

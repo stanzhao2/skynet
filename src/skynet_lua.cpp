@@ -46,7 +46,7 @@ static void openlibs(lua_State* L, const lua_CFunction f[]) {
   luaL_openlibs(L);
   while (f && *f) {
     lua_pushcfunction(L, *f++);
-    if (lua_pcall(L, 0, 0) != LUA_OK) {
+    if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
       lua_error(L);
     }
   }

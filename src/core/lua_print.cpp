@@ -12,7 +12,7 @@ static const char* tostring(lua_State* L) {
   for (int i = 1; i <= argc; i++) {
     lua_pushvalue(L, -1);
     lua_pushvalue(L, i);
-    if (lua_pcall(L, 1, 1) == LUA_OK) {
+    if (lua_pcall(L, 1, 1, 0) == LUA_OK) {
       size_t n;
       const char* p = luaL_checklstring(L, -1, &n);
       str.append(p, n);

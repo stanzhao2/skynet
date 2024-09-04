@@ -90,7 +90,7 @@ static int watch_handler(lua_State* L) {
     return 0;
   }
   lua_rotate(L, 1, 1);
-  if (lua_pcall(L, argc, 0) != LUA_OK) {
+  if (lua_pcall(L, argc, 0, 0) != LUA_OK) {
     lua_ferror("%s\n", luaL_checkstring(L, -1));
   }
   return 0;
@@ -124,7 +124,7 @@ static void cancel_invoke(int rcf, size_t sn) {
   if (typeof_ref == LUA_TFUNCTION) {
     lua_pushboolean(L, 0); /* false */
     lua_pushstring(L, "timeout");
-    if (lua_pcall(L, 2, 0) != LUA_OK) {
+    if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
       lua_ferror("%s\n", luaL_checkstring(L, -1));
     }
   }
@@ -175,7 +175,7 @@ static void back_to_local(const std::string& data, int rcf, size_t sn) {
   if (typeof_ref == LUA_TFUNCTION) {
     lua_pushlstring(L, data.c_str(), data.size());
     int argc = lua_unwrap(L);
-    if (lua_pcall(L, argc, 0) != LUA_OK) {
+    if (lua_pcall(L, argc, 0, 0) != LUA_OK) {
       lua_ferror("%s\n", luaL_checkstring(L, -1));
     }
   }
@@ -229,7 +229,7 @@ static void forword(const std::string& data, size_t caller, int rcf, size_t sn) 
         lua_setfield(L, -2, "rcf");
         lua_pushinteger(L, (lua_Integer)sn);
         lua_setfield(L, -2, "sn");
-        if (lua_pcall(L, 1, 0) != LUA_OK) {
+        if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
           lua_ferror("%s\n", lua_tostring(L, -1));
         }
       }
@@ -271,7 +271,7 @@ static int forword(const topic_type& topic, const char* data, size_t size, size_
         lua_setfield(L, -2, "rcf");
         lua_pushinteger(L, (lua_Integer)sn);
         lua_setfield(L, -2, "sn");
-        if (lua_pcall(L, 1, 0) != LUA_OK) {
+        if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
           lua_ferror("%s\n", lua_tostring(L, -1));
         }
       }
@@ -298,7 +298,7 @@ static int dispatch(const topic_type& topic, const std::string& what, int rcb, s
         lua_setfield(L, -2, "rcb");
         lua_pushinteger(L, (lua_Integer)caller);
         lua_setfield(L, -2, "caller");
-        if (lua_pcall(L, 1, 0) != LUA_OK) {
+        if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
           lua_ferror("%s\n", lua_tostring(L, -1));
         }
       }
@@ -383,7 +383,7 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
       }
       size_t previous = rpcall_caller;
       rpcall_caller = caller;
-      int callok = lua_pcall(L, argc, LUA_MULTRET);
+      int callok = lua_pcall(L, argc, LUA_MULTRET, 0);
       rpcall_caller = previous;
 
       bool need_response = false;

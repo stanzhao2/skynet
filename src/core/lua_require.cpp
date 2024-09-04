@@ -180,7 +180,7 @@ static int luac_require(lua_State* L) {
   /* file not found */
   lua_pushcfunction(L, user_require);
   lua_pushstring(L, filename);
-  if (lua_pcall(L, 1, 1) != LUA_OK) {
+  if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
     lua_error(L);
   }
   if (lua_type(L, -1) != LUA_TSTRING) {

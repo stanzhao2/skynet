@@ -69,18 +69,4 @@ SKYNET_API int luaopen_pcall(lua_State* L) {
   return 0;
 }
 
-SKYNET_API int skynet_pcall(lua_State* L, int n, int r) {
-  return lua_pcallk(L, n, r, 0, 0, finishpcall);
-}
-
-SKYNET_API int skynet_xpcall(lua_State* L, int n, int r) {
-  int top = lua_gettop(L);
-  lua_pushcfunction(L, traceback);
-  int errfunc = top - n;
-  lua_insert(L, errfunc);
-  int status = lua_pcallk(L, n, r, errfunc, 0, finishpcall);
-  lua_remove(L, errfunc); /* remove traceback from stack */
-  return status;
-}
-
 /********************************************************************************/

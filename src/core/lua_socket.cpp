@@ -203,7 +203,7 @@ struct lua_socket final {
 
         lua_pushref(L, handler);
         ec ? push_errcode(L, ec) : lua_pushnil(L);
-        if (lua_pcall(L, 1, 0) != LUA_OK) {
+        if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
           lua_ferror("%s\n", luaL_checkstring(L, -1));
         }
       }
@@ -278,7 +278,7 @@ struct lua_socket final {
           lua_pushlstring(L, data, size);
         }
         ec ? push_errcode(L, ec) : lua_pushnil(L);
-        if (lua_pcall(L, 2, 0) != LUA_OK) {
+        if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
           lua_ferror("%s\n", luaL_checkstring(L, -1));
         }
       }
@@ -311,7 +311,7 @@ struct lua_socket final {
         lua_pushref(L, handler);
         lua_pushinteger(L, (lua_Integer)size);
         ec ? push_errcode(L, ec) : lua_pushnil(L);
-        if (lua_pcall(L, 2, 0) != LUA_OK) {
+        if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
           lua_ferror("%s\n", luaL_checkstring(L, -1));
         }
       }
@@ -429,7 +429,7 @@ struct lua_acceptor final {
           lua_pushnil(L);
         }
         ec ? push_errcode(L, ec) : lua_pushnil(L);
-        if (lua_pcall(L, 2, 0) != LUA_OK) {
+        if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
           lua_ferror("%s\n", luaL_checkstring(L, -1));
         }
       }

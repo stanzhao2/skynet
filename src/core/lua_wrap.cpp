@@ -896,7 +896,7 @@ static int mp_safe(lua_State *L) {
   lua_pushvalue(L, lua_upvalueindex(1));
   lua_insert(L, 1);
 
-  err = lua_pcall(L, argc, LUA_MULTRET);
+  err = lua_pcall(L, argc, LUA_MULTRET, 0);
   total_results = lua_gettop(L);
 
   if (!err) {
@@ -949,7 +949,7 @@ SKYNET_API int skynet_wrap(lua_State* L, int n) {
   int argc = lua_gettop(L);
   lua_pushcfunction(L, pack_any);
   lua_insert(L, argc - n + 1);
-  int status = lua_pcall(L, n, 1);
+  int status = lua_pcall(L, n, 1, 0);
   if (status != LUA_OK) {
     lua_pop(L, 1);
     lua_pushnil(L);
@@ -962,7 +962,7 @@ SKYNET_API int skynet_unwrap(lua_State* L) {
   int top = lua_gettop(L) - 1;
   lua_pushcfunction(L, unpack_any);
   lua_rotate(L, -2, 1);
-  int status = lua_pcall(L, 1, LUA_MULTRET);
+  int status = lua_pcall(L, 1, LUA_MULTRET, 0);
   if (status != LUA_OK) {
     lua_pop(L, 1);
     lua_pushnil(L);

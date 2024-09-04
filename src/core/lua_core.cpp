@@ -33,7 +33,7 @@ static const lua_CFunction core_modules[] = {
 static int openlibs(lua_State* L, const lua_CFunction f[]) {
   while (f && *f) {
     lua_pushcfunction(L, *f++);
-    if (lua_pcall(L, 0, 0) != LUA_OK) {
+    if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
       lua_error(L);
     }
   }
@@ -83,10 +83,6 @@ struct global final {
 
 /********************************************************************************/
 
-#define is_yieldable(s) (s == LUA_OK || s == LUA_YIELD)
-#define lua_co_yield(L, n, ctx, f) lua_yieldk(L, n, (lua_KContext)ctx, f)
-#define lua_co_pcall(L, n, ctx, f) lua_pcallk(L, n, 0, 0, (lua_KContext)ctx, f)
-
 struct lua_coroutine final {
   struct co_task {
     int handler;
@@ -103,18 +99,18 @@ struct lua_coroutine final {
         if (self->closed) {
           break;
         }
-        lua_co_yield(L, 0, self, co_next);
+        lua_yield_k(L, 0, self, co_next);
         continue;
       }
       auto& task = self->task.front();
-      if (!is_yieldable(status)) {
+      if (!lua_success(status)) {
         lua_ferror("%s\n", luaL_checkstring(L, -1));
         lua_pop(L, 1);
       }
       else if (!task.invoked) {
         task.invoked = 1;
         lua_pushref(L, task.handler);
-        lua_co_pcall(L, 0, self, co_next);
+        lua_pcall_k(L, 0, 0, self, co_next);
       }
       lua_unref(L, task.handler);
       self->task.pop_front();
@@ -169,8 +165,11 @@ struct lua_coroutine final {
       return 0;
     }
     int yields = 0;
-    if (is_yieldable(lua_status(self->coL))) {
-      lua_resume(self->coL, L, 0, &yields);
+    if (lua_success(lua_status(self->coL))) {
+      if (lua_resume(self->coL, L, 0, &yields) != LUA_YIELD) {
+        lua_ferror("%s\n", luaL_checkstring(L, -1));
+        lua_pop(L, 1);
+      }
     }
     return 0;
   }
@@ -318,7 +317,7 @@ static int os_post(lua_State* L) {
       lua_pushref(L, params[i]);
       lua_unref(L, params[i]);
     }
-    if (lua_pcall(L, (int)argc, 0) != LUA_OK) {
+    if (lua_pcall(L, (int)argc, 0, 0) != LUA_OK) {
       lua_ferror("%s\n", luaL_checkstring(L, -1));
     }
   });

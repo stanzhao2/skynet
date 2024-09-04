@@ -93,7 +93,7 @@ static void pload_thread(lua_State* L, pload_context* context) {
   }
 
   thread_context = context;
-  int status = lua_pcall(L, argc, 0);
+  int status = lua_pcall(L, argc, 0, 0);
   if (status != LUA_OK) {
     context->error = luaL_checkstring(L, -1);
     context->state = pload_state::error;
