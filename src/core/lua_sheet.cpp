@@ -14,7 +14,7 @@ static struct sheet_L {
 
 static int new_table(lua_State* L, const char* name);
 
-static void load_table(lua_State* L, const char* name, int level) {
+static int load_table(lua_State* L, const char* name, int level) {
   const char* p = strchr(name, '|');
   if (!p) {
     p = strchr(name, '\0');
@@ -23,13 +23,15 @@ static void load_table(lua_State* L, const char* name, int level) {
   memcpy(stage, name, p - name);
   stage[p - name] = '\0';
   level ? lua_getfield(L, -1, stage) : lua_getglobal(L, stage);
-  if (lua_type(L, -1) == LUA_TNIL) {
-    return;
-  }
   name = (*p ? p + 1 : p);
-  if (*name) {
-    load_table(L, name, level + 1);
+
+  int value_type = lua_type(L, -1);
+  if (value_type == LUA_TTABLE) {
+    if (*name) {
+      return load_table(L, name, level + 1);
+    }
   }
+  return value_type;
 }
 
 static int length(lua_State* L) {
@@ -71,9 +73,7 @@ static int read_sheet(lua_State* L) {
   std::unique_lock<std::mutex> lock(_mutex);
   lua_State* GL = sheet.L;
   lua_auto_revert revert(GL);
-
-  load_table(GL, name, 0);
-  if (lua_type(GL, -1) != LUA_TTABLE) {
+  if (load_table(GL, name, 0) != LUA_TTABLE) {
     lua_xmove(GL, L, 1);
   }
   else {
