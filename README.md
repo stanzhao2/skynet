@@ -27,6 +27,7 @@
 -   os.responser()
 -   os.compile(fname [, oname])
 -   os.getcwd()
+-   os.sheet(name)
 -   os.name()
 -   os.coroutine() #7
 -   os.timer() #2

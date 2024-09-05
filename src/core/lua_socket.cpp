@@ -108,9 +108,9 @@ struct ssl_context final {
 /********************************************************************************/
 
 template <typename Ty>
-inline typeof<Ty> ref_new_object(lua_State* L) {
+inline typeof<Ty> ref_new_object(lua_State* L, std::string& what) {
   auto ios = io::service::local();
-  const std::string what = luaL_checkstring(L, 1);
+  what = luaL_checkstring(L, 1);
   if (what == "tcp") {
     return ref_new<Ty>(ios, io::socket::native);
   }
@@ -360,10 +360,11 @@ struct lua_socket final {
       lua_pushstring(L, "no memory");
       return 2;
     }
-    self->socket = ref_new_object<io::socket>(L);
+    std::string what;
+    self->socket = ref_new_object<io::socket>(L, what);
     if (!self->socket) {
       lua_pushnil(L);
-      lua_pushstring(L, "unknown type");
+      lua_pushfstring(L, "unknown type: %s", what.c_str());
       return 2;
     }
     return 1;
@@ -474,10 +475,11 @@ struct lua_acceptor final {
       lua_pushstring(L, "no memory");
       return 2;
     }
-    self->server = ref_new_object<io_socket_server>(L);
+    std::string what;
+    self->server = ref_new_object<io_socket_server>(L, what);
     if (!self->server) {
       lua_pushnil(L);
-      lua_pushstring(L, "unknown type");
+      lua_pushfstring(L, "unknown type: %s", what.c_str());
       return 2;
     }
     return 1;

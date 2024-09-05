@@ -21,6 +21,7 @@
     <ClCompile Include="..\src\core\lua_print.cpp" />
     <ClCompile Include="..\src\core\lua_require.cpp" />
     <ClCompile Include="..\src\core\lua_rpcall.cpp" />
+    <ClCompile Include="..\src\core\lua_sheet.cpp" />
     <ClCompile Include="..\src\core\lua_socket.cpp" />
     <ClCompile Include="..\src\core\lua_timer.cpp" />
     <ClCompile Include="..\src\core\lua_wrap.cpp" />
@@ -54,6 +55,7 @@
     <ClInclude Include="..\src\core\lua_print.h" />
     <ClInclude Include="..\src\core\lua_require.h" />
     <ClInclude Include="..\src\core\lua_rpcall.h" />
+    <ClInclude Include="..\src\core\lua_sheet.h" />
     <ClInclude Include="..\src\core\lua_socket.h" />
     <ClInclude Include="..\src\core\lua_timer.h" />
     <ClInclude Include="..\src\core\lua_wrap.h" />

@@ -120,6 +120,9 @@
     <ClCompile Include="..\src\core\lua_global.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\core\lua_sheet.cpp">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\skynet.h">
@@ -201,6 +204,9 @@
       <Filter>源文件\extend</Filter>
     </ClInclude>
     <ClInclude Include="..\src\core\lua_global.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\lua_sheet.h">
       <Filter>源文件\core</Filter>
     </ClInclude>
   </ItemGroup>

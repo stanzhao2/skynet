@@ -11,6 +11,7 @@
 #include "lua_pload.h"
 #include "lua_print.h"
 #include "lua_require.h"
+#include "lua_sheet.h"
 #include "lua_wrap.h"
 #include "lua_timer.h"
 #include "lua_socket.h"
@@ -26,6 +27,7 @@ static const lua_CFunction core_modules[] = {
   luaopen_pcall,        /* pcall, xpcall  */
   luaopen_rpcall,       /* os.rpcall      */
   luaopen_bind,         /* bind           */
+  luaopen_sheet,        /* os.sheet       */
   luaopen_pload,        /* pload          */
   luaopen_timer,        /* os.timer       */
   luaopen_socket,       /* io.socket      */
