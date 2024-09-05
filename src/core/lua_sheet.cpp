@@ -46,10 +46,11 @@ static int pairs(lua_State* L) {
   lua_pushstring(L, name);
   lua_pushcclosure(L,
     [](lua_State* L) {
+      const char* name = luaL_checkstring(L, lua_upvalueindex(1));
       std::unique_lock<std::mutex> lock(_mutex);
       lua_State* GL = sheet.L;
       lua_auto_revert revert(GL);
-      const char* name = luaL_checkstring(L, lua_upvalueindex(1));
+
       load_table(GL, name, 0);
       if (lua_type(L, 2) == LUA_TNIL) {
         lua_pushnil(GL);
@@ -65,11 +66,12 @@ static int pairs(lua_State* L) {
 }
 
 static int read_sheet(lua_State* L) {
+  lua_pushfstring(L, "%s|%s", luaL_checkstring(L, 1), luaL_checkstring(L, 3));
+  const char* name = luaL_checkstring(L, -1);
   std::unique_lock<std::mutex> lock(_mutex);
   lua_State* GL = sheet.L;
   lua_auto_revert revert(GL);
-  lua_pushfstring(L, "%s|%s", luaL_checkstring(L, 1), luaL_checkstring(L, 3));
-  const char* name = luaL_checkstring(L, -1);
+
   load_table(GL, name, 0);
   if (lua_type(GL, -1) != LUA_TTABLE) {
     lua_xmove(GL, L, 1);
@@ -81,15 +83,16 @@ static int read_sheet(lua_State* L) {
 }
 
 static int luac_export(lua_State* L) {
-  std::unique_lock<std::mutex> lock(_mutex);
-  lua_State* GL = sheet.L;
-  lua_auto_revert revert(GL);
   luaL_checktype(L, 1, LUA_TTABLE);
   const char* name = luaL_checkstring(L, 2);
   lua_rotate(L, 1, 1);
   lua_wrap(L, 1);
   size_t size = 0;
   const char* data = luaL_checklstring(L, -1, &size);
+
+  std::unique_lock<std::mutex> lock(_mutex);
+  lua_State* GL = sheet.L;
+  lua_auto_revert revert(GL);
   lua_pushlstring(GL, data, size);
   lua_unwrap(GL);
   lua_setglobal(GL, name);
@@ -97,14 +100,16 @@ static int luac_export(lua_State* L) {
 }
 
 static int luac_import(lua_State* L) {
-  std::unique_lock<std::mutex> lock(_mutex);
-  lua_State* GL = sheet.L;
-  lua_auto_revert revert(GL);
   const char* name = luaL_checkstring(L, 1);
-  if (lua_getglobal(GL, name) != LUA_TTABLE) {
-    lua_pushnil(L);
-    return 1;
-  }
+  do {
+    std::unique_lock<std::mutex> lock(_mutex);
+    lua_State* GL = sheet.L;
+    lua_auto_revert revert(GL);
+    if (lua_getglobal(GL, name) != LUA_TTABLE) {
+      lua_pushnil(L);
+      return 1;
+    }
+  } while (false);
   return new_table(L, name);
 }
 
