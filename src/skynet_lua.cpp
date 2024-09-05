@@ -69,6 +69,10 @@ SKYNET_API lua_State* skynet_local() {
   return L;
 }
 
+SKYNET_API lua_State* skynet_newstate() {
+  return newstate();
+}
+
 SKYNET_API typeof<io::service> skynet_service() {
   return io::service::local();
 }

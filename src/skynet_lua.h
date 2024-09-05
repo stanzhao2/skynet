@@ -16,6 +16,7 @@
 /***********************************************************************************/
 
 SKYNET_API lua_State* skynet_local();
+SKYNET_API lua_State* skynet_newstate();
 SKYNET_API typeof<io::service> skynet_service();
 
 #define lua_local()   skynet_local()
