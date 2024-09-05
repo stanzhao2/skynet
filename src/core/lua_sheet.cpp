@@ -7,7 +7,7 @@ static std::mutex _mutex;
 static struct sheet_L {
   lua_State* L;
   inline ~sheet_L() { lua_close(L); }
-  inline sheet_L() : L(skynet_newstate()) { }
+  inline sheet_L() : L(luaL_newstate()) { luaL_openlibs(L); }
 } sheet;
 
 /********************************************************************************/
