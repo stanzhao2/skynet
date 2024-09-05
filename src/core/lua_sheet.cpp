@@ -82,7 +82,20 @@ static int read_sheet(lua_State* L) {
   return 1;
 }
 
+static int luac_delete(lua_State* L) {
+  const char* name = luaL_checkstring(L, 2);
+  std::unique_lock<std::mutex> lock(_mutex);
+  lua_State* GL = sheet.L;
+  lua_auto_revert revert(GL);
+  lua_pushnil(GL);
+  lua_setglobal(GL, name);
+  return 0;
+}
+
 static int luac_export(lua_State* L) {
+  if (lua_type(L, 1) == LUA_TNIL) {
+    return luac_delete(L);
+  }
   luaL_checktype(L, 1, LUA_TTABLE);
   if (lua_getmetatable(L, 1)) {
     lua_pushstring(L, "export");
