@@ -92,10 +92,15 @@ static int os_sheet(lua_State* L) {
     lua_getglobal(cL, "require");
     lua_pushstring(cL, name);
     if (lua_pcall(cL, 1, 1, 0) != LUA_OK) {
-      lua_error(L);
+      const char* err = luaL_checkstring(cL, -1);
+      lua_pushnil(L);
+      lua_pushstring(L, err);
+      return 2;
     }
     if (lua_type(cL, -1) != LUA_TTABLE) {
-      luaL_error(L, "sheet not table");
+      lua_pushnil(L);
+      lua_pushfstring(L, "%s not a table", name);
+      return 2;
     }
     lua_setglobal(cL, name);
   }
