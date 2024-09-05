@@ -80,27 +80,30 @@ static int read_sheet(lua_State* L) {
   return 1;
 }
 
-static int import_sheet(lua_State* L) {
+static int luac_export(lua_State* L) {
+  std::unique_lock<std::mutex> lock(_mutex);
+  lua_State* GL = sheet.L;
+  lua_auto_revert revert(GL);
+  luaL_checktype(L, 1, LUA_TTABLE);
+  const char* name = luaL_checkstring(L, 2);
+  lua_rotate(L, 1, 1);
+  lua_wrap(L, 1);
+  size_t size = 0;
+  const char* data = luaL_checklstring(L, -1, &size);
+  lua_pushlstring(GL, data, size);
+  lua_unwrap(GL);
+  lua_setglobal(GL, name);
+  return 0;
+}
+
+static int luac_import(lua_State* L) {
   std::unique_lock<std::mutex> lock(_mutex);
   lua_State* GL = sheet.L;
   lua_auto_revert revert(GL);
   const char* name = luaL_checkstring(L, 1);
-  lua_getglobal(GL, name);
-  if (lua_type(GL, -1) == LUA_TNIL) {
-    lua_getglobal(GL, "require");
-    lua_pushstring(GL, name);
-    if (lua_pcall(GL, 1, 1, 0) != LUA_OK) {
-      const char* err = luaL_checkstring(GL, -1);
-      lua_pushnil(L);
-      lua_pushstring(L, err);
-      return 2;
-    }
-    if (lua_type(GL, -1) != LUA_TTABLE) {
-      lua_pushnil(L);
-      lua_pushfstring(L, "%s not a table", name);
-      return 2;
-    }
-    lua_setglobal(GL, name);
+  if (lua_getglobal(GL, name) != LUA_TTABLE) {
+    lua_pushnil(L);
+    return 1;
   }
   return new_table(L, name);
 }
@@ -142,6 +145,7 @@ static int new_table(lua_State* L, const char* name) {
     return 0;
   }, 1);
   lua_setfield(L, -2, "__newindex");
+
   lua_setmetatable(L, -2);
   return 1;
 }
@@ -150,12 +154,14 @@ static int new_table(lua_State* L, const char* name) {
 
 SKYNET_API int luaopen_sheet(lua_State* L) {
   const luaL_Reg methods[] = {
-    { "import",  import_sheet },
+    { "quote",    luac_import },
+    { "share",    luac_export },
     { NULL,       NULL        }
   };
-  lua_getglobal(L, LUA_GNAME);
+
+  lua_getglobal(L, "table");
   luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1); /* pop '_G' from stack */
+  lua_pop(L, 1); /* pop 'table' from stack */
   return 0;
 }
 

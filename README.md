@@ -15,7 +15,6 @@
 -   unwrap(str)
 -   compress(str [,<"deflate">/<"gzip">])
 -   uncompress(str [,<"deflate">/<"gzip">])
--   import(name)
 
  **os functions** 
 -   os.version()
@@ -114,6 +113,10 @@
 -   string.icmp(str1, str2)
 -   string.isalpha(str)
 -   string.isalnum(str)
+
+ **std functions**
+-   table.share(table, name)
+-   table.quote(name)
 
  **storage functions**
 -   storage.exist(key)
