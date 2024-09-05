@@ -80,7 +80,7 @@ static int read_sheet(lua_State* L) {
   return 1;
 }
 
-static int os_sheet(lua_State* L) {
+static int import_sheet(lua_State* L) {
   std::unique_lock<std::mutex> lock(_mutex);
   lua_State* cL = gL.L;
   lua_auto_revert revert(cL);
@@ -150,12 +150,12 @@ static int new_table(lua_State* L, const char* name) {
 
 SKYNET_API int luaopen_sheet(lua_State* L) {
   const luaL_Reg methods[] = {
-    { "sheet",  os_sheet  },
-    { NULL,     NULL      }
+    { "import",  import_sheet },
+    { NULL,       NULL        }
   };
-  lua_getglobal(L, "os");
+  lua_getglobal(L, LUA_GNAME);
   luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1); /* pop 'os' from stack */
+  lua_pop(L, 1); /* pop '_G' from stack */
   return 0;
 }
 

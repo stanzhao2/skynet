@@ -15,6 +15,7 @@
 -   unwrap(str)
 -   compress(str [,<"deflate">/<"gzip">])
 -   uncompress(str [,<"deflate">/<"gzip">])
+-   import(name)
 
  **os functions** 
 -   os.version()
@@ -27,7 +28,6 @@
 -   os.responser()
 -   os.compile(fname [, oname])
 -   os.getcwd()
--   os.sheet(name)
 -   os.name()
 -   os.coroutine() #7
 -   os.timer() #2
