@@ -68,9 +68,7 @@ static int read_sheet(lua_State* L) {
   std::unique_lock<std::mutex> lock(_mutex);
   lua_State* cL = gL.L;
   lua_auto_revert revert(cL);
-  lua_pushfstring(L, "%s|%s",
-    luaL_checkstring(L, 1), luaL_checkstring(L, 3)
-  );
+  lua_pushfstring(L, "%s|%s", luaL_checkstring(L, 1), luaL_checkstring(L, 3));
   const char* name = luaL_checkstring(L, -1);
   load_table(cL, name, 0);
   if (lua_type(cL, -1) != LUA_TTABLE) {
