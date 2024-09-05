@@ -84,6 +84,16 @@ static int read_sheet(lua_State* L) {
 
 static int luac_export(lua_State* L) {
   luaL_checktype(L, 1, LUA_TTABLE);
+  if (lua_getmetatable(L, 1)) {
+    lua_pushstring(L, "quote");
+    lua_rawget(L, -2);
+    if (lua_type(L, -1) == LUA_TBOOLEAN) {
+      if (lua_toboolean(L, -1)) {
+        luaL_error(L, "share repeat");
+        return 0;
+      }
+    }
+  }
   const char* name = luaL_checkstring(L, 2);
   lua_rotate(L, 1, 1);
   lua_wrap(L, 1);
@@ -116,6 +126,9 @@ static int luac_import(lua_State* L) {
 static int new_table(lua_State* L, const char* name) {
   lua_newtable(L);
   lua_newtable(L);
+  lua_pushboolean(L, 1);
+  lua_setfield(L, -2, "quote");
+
   lua_pushstring(L, name);
   lua_pushcclosure(L, [](lua_State* L) {
     int i = lua_upvalueindex(1);
