@@ -85,7 +85,7 @@ static int read_sheet(lua_State* L) {
 static int luac_export(lua_State* L) {
   luaL_checktype(L, 1, LUA_TTABLE);
   if (lua_getmetatable(L, 1)) {
-    lua_pushstring(L, "quote");
+    lua_pushstring(L, "export");
     lua_rawget(L, -2);
     if (lua_type(L, -1) == LUA_TBOOLEAN) {
       if (lua_toboolean(L, -1)) {
@@ -127,7 +127,7 @@ static int new_table(lua_State* L, const char* name) {
   lua_newtable(L);
   lua_newtable(L);
   lua_pushboolean(L, 1);
-  lua_setfield(L, -2, "quote");
+  lua_setfield(L, -2, "export");
 
   lua_pushstring(L, name);
   lua_pushcclosure(L, [](lua_State* L) {
