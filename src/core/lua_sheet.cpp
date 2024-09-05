@@ -36,8 +36,7 @@ static int length(lua_State* L) {
   std::unique_lock<std::mutex> lock(_mutex);
   lua_State* cL = gL.L;
   lua_auto_revert revert(cL);
-  const char* name = luaL_checkstring(L, 1);
-  load_table(cL, name, 0);
+  load_table(cL, luaL_checkstring(L, 1), 0);
   lua_pushinteger(L, luaL_len(cL, -1));
   return 1;
 }
@@ -93,8 +92,10 @@ static int os_sheet(lua_State* L) {
     lua_getglobal(cL, "require");
     lua_pushstring(cL, name);
     if (lua_pcall(cL, 1, 1, 0) != LUA_OK) {
-      lua_pushnil(L);
-      return 1;
+      lua_error(L);
+    }
+    if (lua_type(cL, -1) != LUA_TTABLE) {
+      luaL_error(L, "sheet not table");
     }
     lua_setglobal(cL, name);
   }
@@ -110,7 +111,7 @@ static int new_table(lua_State* L, const char* name) {
     lua_pushstring(L, luaL_checkstring(L, i));
     lua_insert(L, 1);
     return read_sheet(L);
-    }, 1);
+  }, 1);
   lua_setfield(L, -2, "__index");
 
   lua_pushstring(L, name);
@@ -119,7 +120,7 @@ static int new_table(lua_State* L, const char* name) {
     lua_pushstring(L, luaL_checkstring(L, i));
     lua_insert(L, 1);
     return length(L);
-    }, 1);
+  }, 1);
   lua_setfield(L, -2, "__len");
 
   lua_pushstring(L, name);
@@ -128,8 +129,16 @@ static int new_table(lua_State* L, const char* name) {
     lua_pushstring(L, luaL_checkstring(L, i));
     lua_insert(L, 1);
     return pairs(L);
-    }, 1);
+  }, 1);
   lua_setfield(L, -2, "__pairs");
+
+  lua_pushstring(L, name);
+  lua_pushcclosure(L, [](lua_State* L) {
+    int i = lua_upvalueindex(1);
+    luaL_error(L, "%s is readonly", luaL_checkstring(L, i));
+    return 0;
+  }, 1);
+  lua_setfield(L, -2, "__newindex");
   lua_setmetatable(L, -2);
   return 1;
 }
