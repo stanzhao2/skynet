@@ -89,7 +89,7 @@ static int luac_export(lua_State* L) {
     lua_rawget(L, -2);
     if (lua_type(L, -1) == LUA_TBOOLEAN) {
       if (lua_toboolean(L, -1)) {
-        luaL_error(L, "share repeat");
+        luaL_error(L, "export repeat");
         return 0;
       }
     }
@@ -172,9 +172,9 @@ static int new_table(lua_State* L, const char* name) {
 
 SKYNET_API int luaopen_sheet(lua_State* L) {
   const luaL_Reg methods[] = {
-    { "quote",    luac_import },
-    { "share",    luac_export },
-    { NULL,       NULL        }
+    { "export",   luac_export },
+    { "import",   luac_import },
+    { NULL,         NULL      }
   };
 
   lua_getglobal(L, "table");

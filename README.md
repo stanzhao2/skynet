@@ -115,8 +115,8 @@
 -   string.isalnum(str)
 
  **std functions**
--   table.share(table, name)
--   table.quote(name)
+-   table.export(table, name)
+-   table.import(name)
 
  **storage functions**
 -   storage.exist(key)
