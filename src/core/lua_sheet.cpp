@@ -132,7 +132,7 @@ static int new_proxy(lua_State* L, lua_CFunction f) {
   return f(L);
 }
 
-#define lua_push_proxy(L, name, what, f) { \
+#define set_metamethod(L, name, what, f) { \
   lua_pushstring(L, name); \
   lua_pushcclosure(L, [](lua_State* L) { return new_proxy(L, f); }, 1); \
   lua_setfield(L, -2, what); \
@@ -142,13 +142,11 @@ static int new_table(lua_State* L, const char* name) {
   lua_newtable(L);
   lua_newtable(L);
   lua_pushboolean(L, 1);
-  lua_setfield(L, -2, "export");
-
-  lua_push_proxy(L, name, "__index",    read_sheet);
-  lua_push_proxy(L, name, "__len",      length);
-  lua_push_proxy(L, name, "__pairs",    pairs);
-  lua_push_proxy(L, name, "__newindex", newindex);
-
+  lua_setfield(L, -2, "export");  
+  set_metamethod(L, name, "__index",    read_sheet);
+  set_metamethod(L, name, "__len",      length);
+  set_metamethod(L, name, "__pairs",    pairs);
+  set_metamethod(L, name, "__newindex", newindex);
   lua_setmetatable(L, -2);
   return 1;
 }
