@@ -8,23 +8,21 @@
 - 内置 Lua table 的共享机制, 方便配置数据的多模块共享访问
 
  **加入集群范例**
-```
-  local host = "127.0.0.1";
-  local port = 80;
-  local ok, cluster = os.pload("cluster.adapter", host, port);
-  if not ok then  
-    error(cluster);
-	return;
-  end
-  
-  function main(...)
+```  
+  function main(host, port)
+    host = host or "127.0.0.1";
+    port = port or 80;
+    local ok, cluster = os.pload("cluster.adapter", host, port);
+    if not ok then  
+      error(cluster);
+	  return;
+    end
     while not os.stopped() do
 	  os.wait();
 	end
-  end
-  
-  if cluster then
-    cluster:close();
+    if cluster then
+      cluster:close();
+    end
   end
 ```
 
