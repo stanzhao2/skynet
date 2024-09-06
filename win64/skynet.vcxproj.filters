@@ -123,6 +123,9 @@
     <ClCompile Include="..\src\core\lua_sheet.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\skynet_profiler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\skynet.h">
@@ -208,6 +211,9 @@
     </ClInclude>
     <ClInclude Include="..\src\core\lua_sheet.h">
       <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\skynet_profiler.h">
+      <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

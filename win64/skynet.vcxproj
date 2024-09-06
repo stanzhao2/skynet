@@ -43,6 +43,7 @@
     <ClCompile Include="..\src\skynet_allotor.cpp" />
     <ClCompile Include="..\src\skynet_lua.cpp" />
     <ClCompile Include="..\src\skynet_main.cpp" />
+    <ClCompile Include="..\src\skynet_profiler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\core\lua_bind.h" />
@@ -73,6 +74,7 @@
     <ClInclude Include="..\src\skynet_allotor.h" />
     <ClInclude Include="..\src\skynet_lua.h" />
     <ClInclude Include="..\src\skynet_main.h" />
+    <ClInclude Include="..\src\skynet_profiler.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

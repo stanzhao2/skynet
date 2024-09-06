@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "skynet_allotor.h"
+#include "skynet_profiler.h"
 
 /********************************************************************************/
 
-#define sizeof_array 1024
-#define sizeof_cache (sizeof(size_t) * 4096)
+#define sizeof_array 64 /* max 1024 bytes */
+#define sizeof_cache (sizeof(size_t) * 8192)
 
 #define sizeof_pointer sizeof(void*)
 #define skynet_min(a, b) ((a) < (b) ? (a) : (b))
@@ -124,11 +125,18 @@ void* skynet_allotor(void* ud, void* ptr, size_t osize, size_t nsize) {
   (void)ud; (void)osize;  /* not used */
   if (nsize == 0) {
     //free(ptr);
+#ifdef _DEBUG
+    skynet_profiler(ptr, nullptr, osize, nsize);
+#endif
     allotor.p_free(ptr, osize);
     return NULL;
   }
   //return realloc(ptr, nsize);
-  return allotor.p_realloc(ptr, osize, nsize);
+  void* nptr = allotor.p_realloc(ptr, osize, nsize);
+#ifdef _DEBUG
+  skynet_profiler(ptr, nptr, osize, nsize);
+#endif
+  return nptr;
 }
 
 /********************************************************************************/
