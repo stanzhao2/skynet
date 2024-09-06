@@ -12,17 +12,16 @@ struct directory final {
     return checkudata<directory>(L, 1, name());
   }
   static int __gc(lua_State* L) {
-    auto self = __this(L);
-    self->close(L);
-    self->~directory();
+    close(L);
+    __this(L)->~directory();
     return 0;
   }
   static int close(lua_State* L) {
     auto self = __this(L);
     if (!self->closed) {
       tinydir_close(&self->tdir);
+      self->closed = true;
     }
-    self->closed = true;
     return 0;
   }
   inline static int pairs(lua_State* L) {
@@ -56,6 +55,9 @@ struct directory final {
     if (tinydir_open(&self->tdir, path.c_str()) < 0) {
       lua_pushnil(L);
     }
+    else {
+      self->closed = false;
+    }
     return 1;
   }
   static void init_metatable(lua_State* L) {
@@ -87,7 +89,7 @@ struct directory final {
     return 0;
   }
   tinydir_dir tdir;
-  bool closed = false;
+  bool closed = true;
 };
 
 /********************************************************************************/
