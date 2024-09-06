@@ -1,8 +1,17 @@
+ **SKYNET for Lua5.4**
+- 支持单机和集群模式运行
+- 支持单机和集群内 RPC 调用(同步/异步)
+- 支持协程
+- 单进程可启动多个 Lua 微服务
+- 每个微服务从 main 函数开始运行
+- 内置 Timer 和 Socket (支持SSL和WSS)
+- 内置 Lua table 的共享机制, 方便配置数据的多模块共享访问
+
  **skynet-lua usage**
 -   skynet name [...]
 
  **skynet cluster**
--   skynet cluster.leader [port] [host]
+-   skynet cluster.master [port] [host]
 
  **skynet http broker**
 -   skynet http.broker [port] [host] [ca] [key] [pwd] 
