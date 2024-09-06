@@ -66,13 +66,8 @@ static int read_sheet(lua_State* L) {
   std::unique_lock<std::mutex> lock(_mutex);
   lua_State* GL = sheet.L;
   lua_auto_revert revert(GL);
-  if (load_table(GL, name, 0) != LUA_TTABLE) {
-    lua_xmove(GL, L, 1);
-  }
-  else {
-    new_table(L, name);
-  }
-  return 1;
+  int type = load_table(GL, name, 0);
+  return (type == LUA_TTABLE) ? new_table(L, name) : (lua_xmove(GL, L, 1), 1);
 }
 
 static int luac_delete(lua_State* L) {
