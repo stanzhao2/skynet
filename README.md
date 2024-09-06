@@ -114,7 +114,7 @@
 -   string.isalpha(str)
 -   string.isalnum(str)
 
- **std functions**
+ **table functions**
 -   table.export(table, name)
 -   table.import(name)
 
