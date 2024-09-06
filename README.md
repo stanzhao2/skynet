@@ -7,6 +7,27 @@
 - 内置 Timer 和 Socket (支持SSL和WSS)
 - 内置 Lua table 的共享机制, 方便配置数据的多模块共享访问
 
+ **加入集群范例**
+```
+  local host = "127.0.0.1";
+  local port = 80;
+  local ok, cluster = os.pload("cluster.adapter", host, port);
+  if not ok then  
+    error(cluster);
+	return;
+  end
+  
+  function main(...)
+    while not os.stopped() do
+	  os.wait();
+	end
+  end
+  
+  if cluster then
+    cluster:close();
+  end
+```
+
  **skynet-lua usage**
 -   skynet name [...]
 
