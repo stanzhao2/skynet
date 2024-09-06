@@ -4,100 +4,99 @@
 
 static std::mutex _mutex;
 
-static struct sheet_L {
+static struct globalL {
   lua_State* L;
-  inline ~sheet_L() { lua_close(L); }
-  inline sheet_L() : L(luaL_newstate()) { luaL_openlibs(L); }
-} sheet;
+  inline ~globalL() { lua_close(L); }
+  inline globalL() : L(luaL_newstate()) { luaL_openlibs(L); }
+} global;
+
+#define is_continue(type, name) (type == LUA_TTABLE && *name)
 
 /********************************************************************************/
 
 static int new_table(lua_State* L, const char* name);
 
-static int load_table(lua_State* L, const char* name, int level) {
-  const char* p = strchr(name, '|');
-  if (!p) {
-    p = strchr(name, '\0');
-  }
+static int push_table(lua_State* L, const char* name, int level) {
   char stage[1024];
+  const char* p = strchr(name, '|');
+  p = p ? p : strchr(name, '\0');
   memcpy(stage, name, p - name);
   stage[p - name] = '\0';
   level ? lua_getfield(L, -1, stage) : lua_getglobal(L, stage);
   name = (*p ? p + 1 : p);
-
-  int value_type = lua_type(L, -1);
-  if (value_type == LUA_TTABLE) {
-    if (*name) {
-      return load_table(L, name, level + 1);
-    }
-  }
-  return value_type;
+  auto type = lua_type(L, -1);
+  return is_continue(type, name) ? push_table(L, name, level + 1) : type;
 }
 
 static int length(lua_State* L) {
   std::unique_lock<std::mutex> lock(_mutex);
-  lua_State* GL = sheet.L;
+  lua_State* GL = global.L;
   lua_auto_revert revert(GL);
-  load_table(GL, luaL_checkstring(L, 1), 0);
+  push_table(GL, luaL_checkstring(L, 1), 0);
   lua_pushinteger(L, luaL_len(GL, -1));
   return 1;
 }
 
+static int iterator(lua_State* L) {
+  const char* name = luaL_checkstring(L, lua_upvalueindex(1));
+  std::unique_lock<std::mutex> lock(_mutex);
+  lua_State* GL = global.L;
+  lua_auto_revert revert(GL);
+  push_table(GL, name, 0);
+  lua_xmove(L, GL, 1);
+  return lua_next(GL, -2) ? (lua_xmove(GL, L, 2), 2) : 0;
+}
+
 static int pairs(lua_State* L) {
-  const char* name = luaL_checkstring(L, 1);
-  lua_pushstring(L, name);
-  lua_pushcclosure(L,
-    [](lua_State* L) {
-      const char* name = luaL_checkstring(L, lua_upvalueindex(1));
-      std::unique_lock<std::mutex> lock(_mutex);
-      lua_State* GL = sheet.L;
-      lua_auto_revert revert(GL);
-      load_table(GL, name, 0);
-      lua_xmove(L, GL, 1);
-      return lua_next(GL, -2) ? (lua_xmove(GL, L, 2), 2) : 0;
-    }, 1
-  );
+  lua_pushstring(L, luaL_checkstring(L, 1));
+  lua_pushcclosure(L, iterator, 1);
   return 1;
+}
+
+static int newindex(lua_State* L) {
+  luaL_error(L, "%s is readonly", luaL_checkstring(L, 1));
+  return 0;
+}
+
+static int check_table(lua_State* L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  if (lua_getmetatable(L, 1)) {
+    lua_pushstring(L, "export");
+    lua_rawget(L, -2);
+    if (lua_type(L, -1) == LUA_TBOOLEAN) {
+      if (lua_toboolean(L, -1)) return LUA_ERRRUN;
+    }
+  }
+  return LUA_OK;
 }
 
 static int read_sheet(lua_State* L) {
   lua_pushfstring(L, "%s|%s", luaL_checkstring(L, 1), luaL_checkstring(L, 3));
   const char* name = luaL_checkstring(L, -1);
   std::unique_lock<std::mutex> lock(_mutex);
-  lua_State* GL = sheet.L;
+  lua_State* GL = global.L;
   lua_auto_revert revert(GL);
-  int type = load_table(GL, name, 0);
+  int type = push_table(GL, name, 0);
   return (type == LUA_TTABLE) ? new_table(L, name) : (lua_xmove(GL, L, 1), 1);
 }
 
 static int luac_delete(lua_State* L) {
   const char* name = luaL_checkstring(L, 2);
   std::unique_lock<std::mutex> lock(_mutex);
-  lua_State* GL = sheet.L;
+  lua_State* GL = global.L;
   lua_auto_revert revert(GL);
   lua_pushnil(GL);
   lua_setglobal(GL, name);
   return 0;
 }
 
-static void check_table(lua_State* L) {
-  luaL_checktype(L, 1, LUA_TTABLE);
-  if (lua_getmetatable(L, 1)) {
-    lua_pushstring(L, "export");
-    lua_rawget(L, -2);
-    if (lua_type(L, -1) == LUA_TBOOLEAN) {
-      if (lua_toboolean(L, -1)) {
-        luaL_error(L, "export repeat");
-      }
-    }
-  }
-}
-
 static int luac_export(lua_State* L) {
   if (lua_type(L, 1) == LUA_TNIL) {
     return luac_delete(L);
   }
-  check_table(L);
+  if (check_table(L) != LUA_OK) {
+    luaL_error(L, "export repeat");
+  }
   const char* name = luaL_checkstring(L, 2);
   lua_rotate(L, 1, 1);
   lua_wrap(L, 1);
@@ -105,7 +104,7 @@ static int luac_export(lua_State* L) {
   const char* data = luaL_checklstring(L, -1, &size);
 
   std::unique_lock<std::mutex> lock(_mutex);
-  lua_State* GL = sheet.L;
+  lua_State* GL = global.L;
   lua_auto_revert revert(GL);
   lua_pushlstring(GL, data, size);
   lua_unwrap(GL);
@@ -117,7 +116,7 @@ static int luac_import(lua_State* L) {
   const char* name = luaL_checkstring(L, 1);
   do {
     std::unique_lock<std::mutex> lock(_mutex);
-    lua_State* GL = sheet.L;
+    lua_State* GL = global.L;
     lua_auto_revert revert(GL);
     if (lua_getglobal(GL, name) != LUA_TTABLE) {
       lua_pushnil(L);
@@ -128,8 +127,7 @@ static int luac_import(lua_State* L) {
 }
 
 static int new_proxy(lua_State* L, lua_CFunction f) {
-  int i = lua_upvalueindex(1);
-  lua_pushstring(L, luaL_checkstring(L, i));
+  lua_pushstring(L, luaL_checkstring(L, lua_upvalueindex(1)));
   lua_insert(L, 1);
   return f(L);
 }
@@ -146,17 +144,10 @@ static int new_table(lua_State* L, const char* name) {
   lua_pushboolean(L, 1);
   lua_setfield(L, -2, "export");
 
-  lua_push_proxy(L, name, "__index", read_sheet);
-  lua_push_proxy(L, name, "__len",   length);
-  lua_push_proxy(L, name, "__pairs", pairs);
-
-  lua_pushstring(L, name);
-  lua_pushcclosure(L, [](lua_State* L) {
-    int i = lua_upvalueindex(1);
-    luaL_error(L, "%s is readonly", luaL_checkstring(L, i));
-    return 0;
-  }, 1);
-  lua_setfield(L, -2, "__newindex");
+  lua_push_proxy(L, name, "__index",    read_sheet);
+  lua_push_proxy(L, name, "__len",      length);
+  lua_push_proxy(L, name, "__pairs",    pairs);
+  lua_push_proxy(L, name, "__newindex", newindex);
 
   lua_setmetatable(L, -2);
   return 1;
