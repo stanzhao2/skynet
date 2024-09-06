@@ -52,16 +52,9 @@ static int pairs(lua_State* L) {
       std::unique_lock<std::mutex> lock(_mutex);
       lua_State* GL = sheet.L;
       lua_auto_revert revert(GL);
-
       load_table(GL, name, 0);
-      if (lua_type(L, 2) == LUA_TNIL) {
-        lua_pushnil(GL);
-      }
-      else {
-        lua_pushstring(GL, luaL_checkstring(L, 2));
-      }
-      int status = lua_next(GL, -2);
-      return status ? (lua_xmove(GL, L, 2), 2) : 0;
+      lua_xmove(L, GL, 1);
+      return lua_next(GL, -2) ? (lua_xmove(GL, L, 2), 2) : 0;
     }, 1
   );
   return 1;
