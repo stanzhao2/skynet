@@ -80,10 +80,7 @@ static int luac_delete(lua_State* L) {
   return 0;
 }
 
-static int luac_export(lua_State* L) {
-  if (lua_type(L, 1) == LUA_TNIL) {
-    return luac_delete(L);
-  }
+static void check_table(lua_State* L) {
   luaL_checktype(L, 1, LUA_TTABLE);
   if (lua_getmetatable(L, 1)) {
     lua_pushstring(L, "export");
@@ -91,10 +88,16 @@ static int luac_export(lua_State* L) {
     if (lua_type(L, -1) == LUA_TBOOLEAN) {
       if (lua_toboolean(L, -1)) {
         luaL_error(L, "export repeat");
-        return 0;
       }
     }
   }
+}
+
+static int luac_export(lua_State* L) {
+  if (lua_type(L, 1) == LUA_TNIL) {
+    return luac_delete(L);
+  }
+  check_table(L);
   const char* name = luaL_checkstring(L, 2);
   lua_rotate(L, 1, 1);
   lua_wrap(L, 1);
@@ -124,38 +127,28 @@ static int luac_import(lua_State* L) {
   return new_table(L, name);
 }
 
+static int new_proxy(lua_State* L, lua_CFunction f) {
+  int i = lua_upvalueindex(1);
+  lua_pushstring(L, luaL_checkstring(L, i));
+  lua_insert(L, 1);
+  return f(L);
+}
+
+#define lua_push_proxy(L, name, what, f) { \
+  lua_pushstring(L, name); \
+  lua_pushcclosure(L, [](lua_State* L) { return new_proxy(L, f); }, 1); \
+  lua_setfield(L, -2, what); \
+}
+
 static int new_table(lua_State* L, const char* name) {
   lua_newtable(L);
   lua_newtable(L);
   lua_pushboolean(L, 1);
   lua_setfield(L, -2, "export");
 
-  lua_pushstring(L, name);
-  lua_pushcclosure(L, [](lua_State* L) {
-    int i = lua_upvalueindex(1);
-    lua_pushstring(L, luaL_checkstring(L, i));
-    lua_insert(L, 1);
-    return read_sheet(L);
-  }, 1);
-  lua_setfield(L, -2, "__index");
-
-  lua_pushstring(L, name);
-  lua_pushcclosure(L, [](lua_State* L) {
-    int i = lua_upvalueindex(1);
-    lua_pushstring(L, luaL_checkstring(L, i));
-    lua_insert(L, 1);
-    return length(L);
-  }, 1);
-  lua_setfield(L, -2, "__len");
-
-  lua_pushstring(L, name);
-  lua_pushcclosure(L, [](lua_State* L) {
-    int i = lua_upvalueindex(1);
-    lua_pushstring(L, luaL_checkstring(L, i));
-    lua_insert(L, 1);
-    return pairs(L);
-  }, 1);
-  lua_setfield(L, -2, "__pairs");
+  lua_push_proxy(L, name, "__index", read_sheet);
+  lua_push_proxy(L, name, "__len",   length);
+  lua_push_proxy(L, name, "__pairs", pairs);
 
   lua_pushstring(L, name);
   lua_pushcclosure(L, [](lua_State* L) {
