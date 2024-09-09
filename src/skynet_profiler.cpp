@@ -49,9 +49,9 @@ static void mem_new(lua_State* L, void* ptr, size_t size, size_t type) {
 }
 
 static void mem_resize(void* ptr, void* nptr, size_t osize, size_t nsize) {
-  auto iter = memorys.find(ptr);
-  if (iter != memorys.end()) {
-    if (ptr != nptr) {
+  if (ptr != nptr) {
+    auto iter = memorys.find(ptr);
+    if (iter != memorys.end()) {
       iter->second.resize_count++;
       iter->second.size = nsize;
       memorys[nptr] = iter->second;

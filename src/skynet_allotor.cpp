@@ -10,8 +10,10 @@
 #define sizeof_array 64 /* max 1024 bytes */
 #define sizeof_cache (sizeof(size_t) * 8192)
 
-#define sizeof_pointer sizeof(void*)
-#define skynet_min(a, b) ((a) < (b) ? (a) : (b))
+#define size_of_ptr sizeof(void*)
+#define size_of_min(a, b) ((a) < (b) ? (a) : (b))
+#define index_of_size(n) ((n - 1) >> 4)
+#define size_of_index(i) ((i + 1) << 4)
 
 /********************************************************************************/
 
@@ -39,6 +41,8 @@ private:
   mallotor* allotor_array[sizeof_array];
 };
 
+static thread_local lua_allotor allotor;
+
 /********************************************************************************/
 
 lua_allotor::mallotor::mallotor()
@@ -52,7 +56,7 @@ lua_allotor::mallotor::~mallotor() {
 
 void* lua_allotor::mallotor::pop() {
   void* p = 0;
-  size_t n = skynet_min(sizeof_pointer, wi - ri);
+  size_t n = size_of_min(size_of_ptr, wi - ri);
   if (n) {
     size_t i = (ri & (sizeof_cache - 1));
     *(size_t*)(&p) = *(size_t*)(mp + i);
@@ -62,13 +66,13 @@ void* lua_allotor::mallotor::pop() {
 }
 
 bool lua_allotor::mallotor::push(void* p) {
-  size_t n = skynet_min(sizeof_pointer, sizeof_cache - (wi - ri));
+  size_t n = size_of_min(size_of_ptr, sizeof_cache - (wi - ri));
   if (n) {
     size_t i = (wi & (sizeof_cache - 1));
     *(size_t*)(mp + i) = (size_t)p;
     wi += n;
   }
-  return n == sizeof_pointer;
+  return n == size_of_ptr;
 }
 
 /********************************************************************************/
@@ -92,7 +96,7 @@ void lua_allotor::clear() {
 
 void lua_allotor::p_free(void* ptr, size_t os) {
   if (ptr) {
-    auto oi = (os - 1) >> 4;
+    auto oi = index_of_size(os);
     if (oi >= sizeof_array || !allotor_array[oi]->push(ptr)) {
       free(ptr);
     }
@@ -100,38 +104,35 @@ void lua_allotor::p_free(void* ptr, size_t os) {
 }
 
 void* lua_allotor::p_realloc(void* ptr, size_t os, size_t ns) {
-  auto oi = (os - 1) >> 4;
-  auto ni = (ns - 1) >> 4;
+  auto oi = index_of_size(os);
+  auto ni = index_of_size(ns);
   if (ptr && oi == ni) {
     return ptr;
   }
-  void* p = 0;
+  void* new_ptr = nullptr;
   if (ni < sizeof_array) {
-    p = allotor_array[ni]->pop();
+    new_ptr = allotor_array[ni]->pop();
   }
-  if (p && ptr) {
-    memcpy(p, ptr, skynet_min(os, ns));
+  if (ptr && new_ptr) {
+    memcpy(new_ptr, ptr, size_of_min(os, ns));
     if (oi >= sizeof_array || !allotor_array[oi]->push(ptr)) {
       free(ptr);
     }
   }
-  return p ? p : realloc(ptr, (ni + 1) << 4);
+  return new_ptr ? new_ptr : realloc(ptr, size_of_index(ni));
 }
 
 /********************************************************************************/
 
-void* skynet_allotor(void* ud, void* ptr, size_t osize, size_t nsize) {
-  static thread_local lua_allotor allotor;
+void* skynet_allotor(void* ud, void* ptr, size_t osize, size_t nsize) {  
   (void)ud; (void)osize;  /* not used */
   if (nsize == 0) {
-    //free(ptr);
 #ifdef _DEBUG
     skynet_profiler(ptr, nullptr, osize, nsize);
 #endif
     allotor.p_free(ptr, osize);
     return NULL;
   }
-  //return realloc(ptr, nsize);
   void* nptr = allotor.p_realloc(ptr, osize, nsize);
 #ifdef _DEBUG
   skynet_profiler(ptr, nptr, osize, nsize);
