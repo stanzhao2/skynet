@@ -113,7 +113,7 @@ static void cancel_invoke(int rcf, size_t sn) {
     }
     int nret = 0;
     lua_pushboolean(coL, 0); /* false */
-    lua_pushstring(coL, "timeout");
+    lua_pushliteral(coL, "timeout");
     int state = lua_resume(coL, L, 2, &nret);
     if (nret > 0) {
       lua_xmove(coL, L, nret);
@@ -123,7 +123,7 @@ static void cancel_invoke(int rcf, size_t sn) {
   }
   if (typeof_ref == LUA_TFUNCTION) {
     lua_pushboolean(L, 0); /* false */
-    lua_pushstring(L, "timeout");
+    lua_pushliteral(L, "timeout");
     if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
       lua_ferror("%s\n", luaL_checkstring(L, -1));
     }
@@ -230,7 +230,7 @@ static void forword(const std::string& data, size_t caller, int rcf, size_t sn) 
         lua_auto_revert revert(L);
         lua_pushcfunction(L, watch_handler);
         lua_createtable(L, 0, 5);
-        lua_pushstring(L, evr_response);
+        lua_pushliteral(L, evr_response);
         lua_setfield(L, -2, "what");
         lua_pushlstring(L, data.c_str(), data.size());
         lua_setfield(L, -2, "data");
@@ -266,7 +266,7 @@ static int forword(const topic_type& topic, const char* data, size_t size, size_
         lua_auto_revert revert(L);
         lua_pushcfunction(L, watch_handler);
         lua_createtable(L, 0, 8);
-        lua_pushstring(L, evr_deliver);
+        lua_pushliteral(L, evr_deliver);
         lua_setfield(L, -2, "what");
         lua_pushlstring(L, topic.c_str(), topic.size());
         lua_setfield(L, -2, "name");
@@ -371,7 +371,7 @@ static int dispatch(const topic_type& topic, int rcb, const char* data, size_t s
       int type = lua_pushref(L, rcb);
       if (type != LUA_TFUNCTION) {
         lua_pushboolean(L, 0);
-        lua_pushstring(L, "function not found");
+        lua_pushliteral(L, "function not found");
         lua_wrap(L, 2);
         size_t nsize;
         const char* result = luaL_checklstring(L, -1, &nsize);
@@ -535,12 +535,12 @@ static int luac_rpcall(lua_State* L) {
 
   if (service->stopped()) {
     lua_pushboolean(L, 0); /* false */
-    lua_pushstring(L, "cancel");
+    lua_pushliteral(L, "cancel");
     return 2;
   }
   if (!result) {
     lua_pushboolean(L, 0); /* false */
-    lua_pushstring(L, "timeout");
+    lua_pushliteral(L, "timeout");
     return 2;
   }
   lua_pushlstring(L, rpcall_ret.c_str(), rpcall_ret.size());

@@ -61,7 +61,7 @@ static int newindex(lua_State* L) {
 static int check_table(lua_State* L) {
   luaL_checktype(L, 1, LUA_TTABLE);
   if (lua_getmetatable(L, 1)) {
-    lua_pushstring(L, "export");
+    lua_pushliteral(L, "export");
     lua_rawget(L, -2);
     if (lua_type(L, -1) == LUA_TBOOLEAN) {
       if (lua_toboolean(L, -1)) return LUA_ERRRUN;

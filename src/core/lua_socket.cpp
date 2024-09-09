@@ -80,7 +80,7 @@ struct ssl_context final {
     auto self = newuserdata<ssl_context>(L, name());
     if (!self) {
       lua_pushnil(L);
-      lua_pushstring(L, "no memory");
+      lua_pushliteral(L, "no memory");
       return 2;
     }
     error_code ec;
@@ -253,7 +253,7 @@ struct lua_socket final {
       return remote_endpoint(L);
     }
     lua_pushnil(L);
-    lua_pushstring(L, "unknown type");
+    lua_pushliteral(L, "unknown type");
     return 2;
   }
   static int read(lua_State* L) {
@@ -357,7 +357,7 @@ struct lua_socket final {
     auto self = newuserdata<lua_socket>(L, name());
     if (!self) {
       lua_pushnil(L);
-      lua_pushstring(L, "no memory");
+      lua_pushliteral(L, "no memory");
       return 2;
     }
     std::string what;
@@ -472,7 +472,7 @@ struct lua_acceptor final {
     auto self = newuserdata<lua_acceptor>(L, name());
     if (!self) {
       lua_pushnil(L);
-      lua_pushstring(L, "no memory");
+      lua_pushliteral(L, "no memory");
       return 2;
     }
     std::string what;

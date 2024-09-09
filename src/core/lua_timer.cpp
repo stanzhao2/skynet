@@ -72,7 +72,7 @@ public:
     auto self = newuserdata<class_timer>(L, name());
     if (!self) {
       lua_pushnil(L);
-      lua_pushstring(L, "no memory");
+      lua_pushliteral(L, "no memory");
       return 2;
     }
     return 1;
