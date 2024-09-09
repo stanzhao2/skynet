@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "skynet_allotor.h"
-#include "skynet_profiler.h"
 
 /********************************************************************************/
 
@@ -127,17 +126,10 @@ void* lua_allotor::p_realloc(void* ptr, size_t os, size_t ns) {
 void* skynet_allotor(void* ud, void* ptr, size_t osize, size_t nsize) {  
   (void)ud; (void)osize;  /* not used */
   if (nsize == 0) {
-#ifdef _DEBUG
-    skynet_profiler(ptr, nullptr, osize, nsize);
-#endif
     allotor.p_free(ptr, osize);
     return NULL;
   }
-  void* nptr = allotor.p_realloc(ptr, osize, nsize);
-#ifdef _DEBUG
-  skynet_profiler(ptr, nptr, osize, nsize);
-#endif
-  return nptr;
+  return allotor.p_realloc(ptr, osize, nsize);
 }
 
 /********************************************************************************/

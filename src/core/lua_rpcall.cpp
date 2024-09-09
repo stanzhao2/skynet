@@ -181,9 +181,7 @@ static void back_to_local(const std::string& data, int rcf, size_t sn) {
   }
 }
 
-static int check_timeout() {
-  static thread_local steady_timer _timer(*lua_service());
-  auto now  = steady_clock();
+static int check_timeout(size_t now) {
   auto iter = invoke_pendings.begin();
   for (; iter != invoke_pendings.end(); ++iter) {
     auto timeout = iter->second.timeout;
@@ -200,10 +198,23 @@ static int check_timeout() {
       service->post(_bind(cancel_invoke, rcf, iter->first));
     }
   }
-  _timer.expires_after(std::chrono::milliseconds(1000));
+  return LUA_OK;
+}
+
+static int check_timeout(lua_State* L, size_t expires) {
+  static thread_local size_t _lastgc = rand();
+  static thread_local steady_timer _timer(*lua_service());
+  /* GC every 10 minutes */
+  if ((_lastgc += expires) >= 600000) {
+    _lastgc = 0;
+    lua_gc(L, LUA_GCCOLLECT);
+  }
+  /* check timeout for rpcall */
+  check_timeout(steady_clock());
+  _timer.expires_after(std::chrono::milliseconds(expires));
   _timer.async_wait(
-    [](const error_code& ec) {
-      if (!ec) check_timeout();
+    [L, expires](const error_code& ec) {
+      if (!ec) check_timeout(L, expires);
     }
   );
   return LUA_OK;
@@ -664,8 +675,7 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
   lua_getglobal(L, "os");
   luaL_setfuncs(L, methods, 0);
   lua_pop(L, 1); /* pop 'os' from stack */
-  check_timeout();
-  return 0;
+  return check_timeout(L, 1000);
 }
 
 SKYNET_API int lua_l_lookout(lua_CFunction f) {

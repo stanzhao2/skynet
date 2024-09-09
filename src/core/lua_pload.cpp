@@ -72,6 +72,7 @@ static void clonepath(lua_State* from, lua_State* to, const char* name) {
 
 /* current microservice thread */
 static void pload_thread(lua_State* L, pload_context* context) {
+  srand((unsigned int)time(0));
   context->L = lua_local();
   if (!context->L) {
     context->state = pload_state::error;

@@ -14,6 +14,7 @@
 #include "extend/lua_string.h"
 #include "extend/lua_storage.h"
 #include "extend/lua_directory.h"
+#include "skynet_profiler.h"
 
 /********************************************************************************/
 
@@ -29,6 +30,7 @@ static const lua_CFunction skynet_modules[] = {
   luaopen_lstring,      /* string.split    */
   luaopen_storage,      /*  */
   luaopen_directory,    /* os.mkdir, os.opendir */
+  luaopen_profiler,     /* snapshot */
   NULL
 };
 

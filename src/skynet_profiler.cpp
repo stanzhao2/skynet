@@ -129,7 +129,7 @@ static void mark_table(lua_State *L, lua_State *dL, const void * parent, const c
       lua_pop(L, 1);
     }
     else {
-      char key[32];
+      char key[256];
       const char *desc = key_tostring(L, -2, key, sizeof(key));
       mark_object(L, dL, pv , desc);
     }
@@ -234,79 +234,31 @@ static void mark_object(lua_State *L, lua_State *dL, const void * parent, const 
   }
 }
 
+static int luac_snapshot(lua_State* L) {
+  lua_gc(L, LUA_GCCOLLECT);
+  lua_State *dL = luaL_newstate();
+  for (int i = 0; i < MARK; i++) {
+    lua_newtable(dL);
+  }
+  lua_pushvalue(L, LUA_REGISTRYINDEX);
+  mark_table(L, dL, NULL, "[registry]");
+  lua_pushvalue(dL, 1);
+  lua_xmove(dL, L, TABLE);
+  lua_close(dL);
+  return 1;
+}
+
 /********************************************************************************/
 
-struct luanode {
-  std::string type;
-  std::string file;
-  size_t size;
-  size_t line;
-  size_t resize_count;
-};
-
-static thread_local lua_Debug ar;
-static thread_local std::map<void*, luanode> memorys;
-
-static lua_State* getthread(lua_State *L) {
-  return lua_isthread(L, 1) ? lua_tothread(L, 1) : L;
-}
-
-static const char* fileline(lua_State* L, size_t& line) {
-  L = getthread(L);
-  for (int i = 0; i < 10; i++) {
-    if (lua_getstack(L, i, &ar)) {
-      if (lua_getinfo(L, "Sl", &ar)) {
-        if (ar.currentline > 0) {
-          line = ar.currentline;
-          return ar.short_src;
-        }
-      }
-    }
-  }
-  return nullptr;
-}
-
-static void mem_new(lua_State* L, void* ptr, size_t size, size_t type) {
-  lua_auto_revert revert(L);
-  luanode node;
-  const char* file = fileline(L, node.line);
-  if (file) {
-    node.file = file;
-    node.size = size;
-    node.resize_count = 0;
-    node.type = lua_typename(L, (int)type);
-    memorys[ptr] = node;
-  }
-}
-
-static void mem_resize(void* ptr, void* nptr, size_t osize, size_t nsize) {
-  if (ptr != nptr) {
-    auto iter = memorys.find(ptr);
-    if (iter != memorys.end()) {
-      iter->second.resize_count++;
-      iter->second.size = nsize;
-      memorys[nptr] = iter->second;
-      memorys.erase(iter);
-    }
-  }
-}
-
-void skynet_profiler(void* ptr, void* nptr, size_t osize, size_t nsize) {
-  if (nsize == 0) { /* free memory */
-    memorys.erase(ptr);
-    return;
-  }
-  if (ptr == nullptr) {
-    lua_State* L = lua_local();
-    if (L) {
-      switch (osize) {
-      case LUA_TTABLE:
-        mem_new(L, nptr, nsize, osize);
-      }
-    }
-    return;
-  }
-  mem_resize(ptr, nptr, osize, nsize);
+SKYNET_API int luaopen_profiler(lua_State* L) {
+  const luaL_Reg methods[] = {
+    //{ "snapshot",   luac_snapshot }, /* snapshot */
+    { NULL,         NULL          }
+  };
+  lua_getglobal(L, LUA_GNAME);
+  luaL_setfuncs(L, methods, 0);
+  lua_pop(L, 1); /* pop '_G' from stack */
+  return 0;
 }
 
 /********************************************************************************/

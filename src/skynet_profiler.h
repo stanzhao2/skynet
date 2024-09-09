@@ -7,9 +7,11 @@
 # pragma once
 #endif
 
+#include "skynet_lua.h"
+
 /********************************************************************************/
 
-void skynet_profiler(void* ptr, void* nptr, size_t osize, size_t nsize);
+SKYNET_API int luaopen_profiler(lua_State* L);
 
 /********************************************************************************/
 

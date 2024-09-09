@@ -74,6 +74,7 @@ SKYNET_API void skynet_main(lua_State* L, int argc, const char* argv[]) {
       local->cancel();
     }
   );
+  srand((unsigned int)time(0));
   lua_pushcfunction(L, pmain);
   lua_pushinteger(L, argc);
   lua_pushlightuserdata(L, argv);
