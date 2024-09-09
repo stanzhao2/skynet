@@ -10,7 +10,7 @@ static void push_errcode(lua_State* L, const error_code& ec) {
 }
 
 static void push_endpoint(lua_State* L, const ip::tcp::endpoint& endpoint) {
-  lua_newtable(L);
+  lua_createtable(L, 0, 2);
   lua_pushinteger(L, endpoint.port());
   lua_setfield(L, -2, "port");
 

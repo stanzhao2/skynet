@@ -229,7 +229,7 @@ static void forword(const std::string& data, size_t caller, int rcf, size_t sn) 
         lua_State* L = lua_local();
         lua_auto_revert revert(L);
         lua_pushcfunction(L, watch_handler);
-        lua_newtable(L);
+        lua_createtable(L, 0, 5);
         lua_pushstring(L, evr_response);
         lua_setfield(L, -2, "what");
         lua_pushlstring(L, data.c_str(), data.size());
@@ -265,7 +265,7 @@ static int forword(const topic_type& topic, const char* data, size_t size, size_
         lua_State* L = lua_local();
         lua_auto_revert revert(L);
         lua_pushcfunction(L, watch_handler);
-        lua_newtable(L);
+        lua_createtable(L, 0, 8);
         lua_pushstring(L, evr_deliver);
         lua_setfield(L, -2, "what");
         lua_pushlstring(L, topic.c_str(), topic.size());
@@ -300,7 +300,7 @@ static int dispatch(const topic_type& topic, const std::string& what, int rcb, s
         lua_State* L = lua_local();
         lua_auto_revert revert(L);
         lua_pushcfunction(L, watch_handler);
-        lua_newtable(L);
+        lua_createtable(L, 0, 4);
         lua_pushlstring(L, what.c_str(), what.size());
         lua_setfield(L, -2, "what");
         lua_pushlstring(L, topic.c_str(), topic.size());
