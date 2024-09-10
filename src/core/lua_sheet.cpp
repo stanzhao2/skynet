@@ -7,7 +7,7 @@ static std::mutex _mutex;
 static struct globalL {
   lua_State* L;
   inline ~globalL() { lua_close(L); }
-  inline globalL() : L(luaL_newstate()) { luaL_openlibs(L); }
+  inline  globalL() : L(luaL_newstate()) { }
 } global;
 
 #define is_continue(type, name) (type == LUA_TTABLE && *name)
