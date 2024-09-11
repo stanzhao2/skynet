@@ -33,12 +33,14 @@
     <ClCompile Include="..\src\extend\lua_json.cpp" />
     <ClCompile Include="..\src\extend\lua_list.cpp" />
     <ClCompile Include="..\src\extend\lua_openssl.cpp" />
+    <ClCompile Include="..\src\extend\lua_skiplist.cpp" />
     <ClCompile Include="..\src\extend\lua_storage.cpp" />
     <ClCompile Include="..\src\extend\lua_string.cpp" />
     <ClCompile Include="..\src\extend\rapidjson\document.cpp" />
     <ClCompile Include="..\src\extend\rapidjson\rapidjson.cpp" />
     <ClCompile Include="..\src\extend\rapidjson\schema.cpp" />
     <ClCompile Include="..\src\extend\rapidjson\values.cpp" />
+    <ClCompile Include="..\src\extend\skiplist\skiplist.cpp" />
     <ClCompile Include="..\src\skynet.cpp" />
     <ClCompile Include="..\src\skynet_allotor.cpp" />
     <ClCompile Include="..\src\skynet_lua.cpp" />
@@ -68,8 +70,10 @@
     <ClInclude Include="..\src\extend\lua_json.h" />
     <ClInclude Include="..\src\extend\lua_list.h" />
     <ClInclude Include="..\src\extend\lua_openssl.h" />
+    <ClInclude Include="..\src\extend\lua_skiplist.h" />
     <ClInclude Include="..\src\extend\lua_storage.h" />
     <ClInclude Include="..\src\extend\lua_string.h" />
+    <ClInclude Include="..\src\extend\skiplist\skiplist.h" />
     <ClInclude Include="..\src\skynet.h" />
     <ClInclude Include="..\src\skynet_allotor.h" />
     <ClInclude Include="..\src\skynet_lua.h" />

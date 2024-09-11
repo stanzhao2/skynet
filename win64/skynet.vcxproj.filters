@@ -25,6 +25,9 @@
     <Filter Include="源文件\extend\rapidjson">
       <UniqueIdentifier>{b428b461-41c9-4186-98b3-cc59f58b434e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\extend\skiplist">
+      <UniqueIdentifier>{739298ac-62da-4016-a138-9da3ac660de6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\skynet.cpp">
@@ -126,6 +129,12 @@
     <ClCompile Include="..\src\skynet_profiler.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\extend\skiplist\skiplist.cpp">
+      <Filter>源文件\extend\skiplist</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\extend\lua_skiplist.cpp">
+      <Filter>源文件\extend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\skynet.h">
@@ -214,6 +223,12 @@
     </ClInclude>
     <ClInclude Include="..\src\skynet_profiler.h">
       <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\extend\skiplist\skiplist.h">
+      <Filter>源文件\extend\skiplist</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\extend\lua_skiplist.h">
+      <Filter>源文件\extend</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

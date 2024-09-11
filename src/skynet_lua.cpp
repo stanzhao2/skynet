@@ -8,6 +8,7 @@
 #include "extend/lua_compile.h"
 #include "extend/lua_json.h"
 #include "extend/lua_list.h"
+#include "extend/lua_skiplist.h"
 #include "extend/lua_deflate.h"
 #include "extend/lua_http.h"
 #include "extend/lua_openssl.h"
@@ -24,6 +25,7 @@ static const lua_CFunction skynet_modules[] = {
   luaopen_json,         /* json.encode... */
   luaopen_list,         /* list */
   luaopen_http,         /*  */
+  luaopen_skiplist,     /*  */
   luaopen_deflate,      /* deflate, inflate */
   luaopen_base64,       /* base64.encode  */
   luaopen_crypto,       /* crypto.sha1 ... */

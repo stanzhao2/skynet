@@ -77,6 +77,7 @@
 
  **std functions**
 -   std.list() #3
+-   std.skiplist([compfunc]) #8
 
  **list functions**
 -   list:empty()
@@ -193,3 +194,4 @@
 -  _#5: return server object
 -  _#6: return ssl context object
 -  _#7: return coroutine object
+-  _#8: return skiplist object

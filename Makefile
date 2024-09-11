@@ -38,6 +38,7 @@ SOURCE  := src/core/lua_bind.o \
 		   src/extend/http/parser.o \
 		   src/extend/rapidjson/document.o \
 		   src/extend/rapidjson/rapidjson.o \
+		   src/extend/skiplist/skiplist.o \
 		   src/extend/rapidjson/schema.o \
 		   src/extend/rapidjson/values.o \
 		   src/extend/lua_compile.o \
@@ -46,13 +47,15 @@ SOURCE  := src/core/lua_bind.o \
 		   src/extend/lua_http.o \
 		   src/extend/lua_json.o \
 		   src/extend/lua_list.o \
+		   src/extend/lua_skiplist.o \
 		   src/extend/lua_openssl.o \
 		   src/extend/lua_storage.o \
 		   src/extend/lua_string.o \
            src/skynet.o \
            src/skynet_allotor.o \
 		   src/skynet_lua.o \
-		   src/skynet_main.o
+		   src/skynet_main.o \
+		   src/skynet_profiler.o
 		   
 #library path
 LIBDIRS := -L$(LUA_LIBDIR)
