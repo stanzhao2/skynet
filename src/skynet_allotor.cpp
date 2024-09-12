@@ -6,13 +6,13 @@
 
 /********************************************************************************/
 
-#define sizeof_array 128 /* max 2048 bytes */
-#define sizeof_cache (sizeof(size_t) * 1024)
+#define sizeof_array 16 /* max 1024 bytes */
+#define sizeof_cache (sizeof(size_t) * 8192)
 
 #define size_of_ptr sizeof(void*)
 #define size_of_min(a, b) ((a) < (b) ? (a) : (b))
-#define index_of_size(n) ((n - 1) >> 4)
-#define size_of_index(i) ((i + 1) << 4)
+#define index_of_size(n) ((n - 1) >> 6) /* base on 64 bytes */
+#define size_of_index(i) ((i + 1) << 6) /* base on 64 bytes */
 
 /********************************************************************************/
 
