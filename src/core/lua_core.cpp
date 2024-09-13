@@ -247,7 +247,7 @@ static int os_stop(lua_State* L) {
 /* force exit from the current process */
 static int os_exit(lua_State* L) {
   main_service->stop();
-  main_service->cancel();
+  main_service->wakeup();
   return 0;
 }
 

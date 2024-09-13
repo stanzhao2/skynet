@@ -142,7 +142,7 @@ static void cancel_block(const std::string& data, int rcf, size_t sn) {
   std::string* pcontext = (std::string*)service->get_context();
   if (pcontext) {
     pcontext->assign(data);
-    service->cancel();
+    service->wakeup();
   }
 }
 

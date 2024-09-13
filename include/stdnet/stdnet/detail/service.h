@@ -40,7 +40,7 @@ namespace detail {
   public:
     ASIO_DECL service();
     ASIO_DECL int  id() const;
-    ASIO_DECL void cancel();
+    ASIO_DECL void wakeup();
     ASIO_DECL void wait();
     ASIO_DECL bool wait_for(size_t expires);
     ASIO_DECL void set_context(const void* context);
@@ -75,7 +75,7 @@ namespace detail {
     return _id.value();
   }
 
-  ASIO_DECL void service::cancel() {
+  ASIO_DECL void service::wakeup() {
     auto self(shared_from_this());
     this->post([this, self]() { _semaphore.signal(); });
   }
