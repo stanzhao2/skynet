@@ -37,10 +37,10 @@
 
  **global functions**
 -   bind(func, [, ...])
+-   pcall(<func [, ...]>/<name [, callback] [, ...]>)
 -   trace(...)
 -   throw(...)
 -   wrap(...)
--   pcall(<name [, callback] [, ...]> / <func [, ...]>)
 -   unwrap(str)
 -   compress(str [,<"deflate">/<"gzip">])
 -   uncompress(str [,<"deflate">/<"gzip">])
@@ -151,7 +151,7 @@
  **storage functions**
 -   storage.exist(key)
 -   storage.set(key, value [, ...])
--   storage.set_if(key, func, value [, ...])
+-   storage.set_if(key, checkfunc, value [, ...])
 -   storage.get(key)
 -   storage.erase(key)
 -   storage.empty()
