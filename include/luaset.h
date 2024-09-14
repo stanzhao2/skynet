@@ -9,6 +9,21 @@
 
 #include <lua.hpp>
 
+/* for Lua 5.0 */
+#if !defined LUA_VERSION_NUM
+# define luaL_Reg luaL_reg
+# define lua_pushinteger(L, n) lua_pushnumber(L, (lua_Number)n)
+#elif LUA_VERSION_NUM > 501
+# if !defined(luaL_checkint)
+#  define luaL_checkint(L, i) (int)luaL_checkinteger(L, i)
+# endif
+#endif
+
+/* for Lua 5.2 and lower */
+#if !defined LUA_VERSION_NUM || LUA_VERSION_NUM < 503
+# define lua_isinteger(L, n) (!lua_isnoneornil(L, n) && (luaL_checknumber(L, n) == luaL_checkinteger(L, n)) ? 1 : 0)
+#endif
+
 #ifndef SKYNET_API
 #define SKYNET_API
 #endif
