@@ -331,7 +331,7 @@ function main(port, host, ca, key, pwd)
     error(format("socket listen error at port: %d", port));
 	return;
   end
-  rpc.declare("http:index", skynet_version);
+  rpc.create("http:index", skynet_version);
   print(format("%s works on port %d", os.name(), port));
   while not os.stopped() do
     os.wait();
