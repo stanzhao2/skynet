@@ -9,10 +9,14 @@
 
 --------------------------------------------------------------------------------
 
-local format = string.format;
 local proto_type = require("cluster.protocol");
+local r_deliver  = os.r_deliver;
+local r_bind     = os.r_bind;
+local r_unbind   = os.r_unbind;
+local r_response = os.r_response;
 
-local lua_bounds = {};
+local format = string.format;
+local r_handlers = {};
 local active_sessions = {};
 
 --------------------------------------------------------------------------------
@@ -33,10 +37,10 @@ end
 
 local function lua_bind(info, caller)
   local name = info.name;
-  if not lua_bounds[caller] then
-    lua_bounds[caller] = {};
+  if not r_handlers[caller] then
+    r_handlers[caller] = {};
   end
-  lua_bounds[caller][name] = info;
+  r_handlers[caller][name] = info;
   trace(format("bind %s by caller(%d)", name, caller));
 end
 
@@ -44,9 +48,9 @@ end
 
 local function lua_unbind(name, caller)
   if caller > 0xffff then    
-	os.r_unbind(name, caller);
+	r_unbind(name, caller);
   end
-  lua_bounds[caller][name] = nil;
+  r_handlers[caller][name] = nil;
   trace(format("unbind %s by caller(%d)", name, caller));
 end
 
@@ -60,12 +64,12 @@ local function ws_on_error(peer, msg)
     peer:close();
   end
   --cancel bind for the session
-  for caller, v in pairs(lua_bounds) do
+  for caller, v in pairs(r_handlers) do
     if caller > 0xffff and caller & 0xffff == id then
 	  for name, info in pairs(v) do
 	    lua_unbind(name, caller);
 	  end
-	  lua_bounds[caller] = nil;
+	  r_handlers[caller] = nil;
 	end
   end
 end
@@ -89,7 +93,7 @@ local function ws_on_receive(peer, data, ec)
 	local caller = info.caller << 16 | id;
 	local rcf    = info.rcf;
 	local sn     = info.sn;
-	os.r_deliver(name, argv, mask, who, caller, rcf, sn);
+	r_deliver(name, argv, mask, who, caller, rcf, sn);
 	return;
   end
   if what == proto_type.response then
@@ -97,7 +101,7 @@ local function ws_on_receive(peer, data, ec)
 	local caller = info.caller;
 	local rcf    = info.rcf;
 	local sn     = info.sn;
-	os.r_response(data, caller, rcf, sn);
+	r_response(data, caller, rcf, sn);
 	return;
   end  
   if what == proto_type.bind then
@@ -105,7 +109,7 @@ local function ws_on_receive(peer, data, ec)
 	local rcb    = info.rcb;
 	local caller = info.caller << 16 | id;
 	lua_bind(info, caller);
-	os.r_bind(name, caller, rcb);
+	r_bind(name, caller, rcb);
 	return;
   end
   if what == proto_type.unbind then
@@ -162,7 +166,7 @@ local function new_session(peer)
   active_sessions[id] = session;
   peer:receive(bind(ws_on_receive, peer));
 
-  for caller, bounds in pairs(lua_bounds) do
+  for caller, bounds in pairs(r_handlers) do
     if caller <= 0xffff then
 	  for name, info in pairs(bounds) do
 	    peer:send(wrap(info));
@@ -271,11 +275,11 @@ function main(host, port)
   local socket = io.socket(protocol);
   socket:setheader("xforword-port", lport);
   
-  os.lookout(on_lookout);
   if not socket:connect(host, port) then
     error(format("socket connect to %s:%d error", host, port));
 	return;
   end
+  os.lookout(on_lookout);
   if not connect_members(socket, protocol) then
     return;
   end
