@@ -40,7 +40,7 @@
 -   trace(...)
 -   throw(...)
 -   wrap(...)
--   pcall(<func>/<name> [, ...])
+-   pcall(<name [, callback] [, ...]> / <func [, ...]>)
 -   unwrap(str)
 -   compress(str [,<"deflate">/<"gzip">])
 -   uncompress(str [,<"deflate">/<"gzip">])

@@ -464,8 +464,8 @@ static int luac_deliver(lua_State* L) {
 
 /* async wait return values */
 static int luac_invoke(lua_State* L) {
-  int rcf = lua_ref(L, 1);
-  const char* name = luaL_checkstring(L, 2);
+  const char* name = luaL_checkstring(L, 1);
+  int rcf = lua_ref(L, 2);
   size_t size = 0;
   const char* data = nullptr;
   int argc = lua_gettop(L) - 2;
@@ -488,7 +488,7 @@ static int luac_invoke(lua_State* L) {
 
 static int luac_rpcall(lua_State* L) {
   /* async call */
-  if (lua_type(L, 1) == LUA_TFUNCTION) {
+  if (lua_type(L, 2) == LUA_TFUNCTION) {
     return luac_invoke(L);
   }
   const char* name = luaL_checkstring(L, 1);
