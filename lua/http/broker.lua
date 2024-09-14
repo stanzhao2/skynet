@@ -171,7 +171,7 @@ local function co_on_request(method, session)
   end
 
   local status = 200;
-  local ok, result = os.rpcall(method, query, body);
+  local ok, result = pcall(method, query, body);
   if not ok then
     status = 500;
   end
@@ -331,7 +331,7 @@ function main(port, host, ca, key, pwd)
     error(format("socket listen error at port: %d", port));
 	return;
   end
-  os.declare("http:index", skynet_version);
+  rpc.declare("http:index", skynet_version);
   print(format("%s works on port %d", os.name(), port));
   while not os.stopped() do
     os.wait();

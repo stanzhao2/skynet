@@ -12,7 +12,7 @@ local function await(co, func, ...)
     end
   end
   return function(...)
-    co:dispatch(bind(callback, os.responser(), ...));
+    co:dispatch(bind(callback, rpc.responser(), ...));
   end
 end
 

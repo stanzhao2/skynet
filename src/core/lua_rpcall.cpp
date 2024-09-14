@@ -659,9 +659,8 @@ static int luac_r_deliver(lua_State* L) {
 SKYNET_API int luaopen_rpcall(lua_State* L) {
   const luaL_Reg methods[] = {
     { "lookout",    luac_lookout    },
-    { "declare",    luac_declare    },
-    { "undeclare",  luac_undeclare  },
-    { "rpcall",     luac_rpcall     },
+    { "create",     luac_declare    },
+    { "remove",     luac_undeclare  },
     { "deliver",    luac_deliver    },
     { "caller",     luac_r_caller   },
     { "responser",  luac_r_handler  },
@@ -672,9 +671,9 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
     { "r_response", luac_r_response },
     { NULL,         NULL            }
   };
-  lua_getglobal(L, "os");
+  lua_newtable(L);
   luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1); /* pop 'os' from stack */
+  lua_setglobal(L, "rpc");
   return check_timeout(L, 1000);
 }
 
@@ -683,6 +682,10 @@ SKYNET_API int lua_l_lookout(lua_CFunction f) {
   watcher_ios = lua_service()->id();
   watcher_cfn = f;
   return LUA_OK;
+}
+
+SKYNET_API int lua_l_rpcall(lua_State* L) {
+  return luac_rpcall(L);
 }
 
 SKYNET_API int lua_r_unbind(const char* name, size_t who, int* opt) {

@@ -328,10 +328,9 @@ SKYNET_API int luaopen_core(lua_State* L) {
     { "name",       os_name       },
     { "processors", os_processors },
     { "exit",       os_exit       },
+    { "post",       os_post       },
     { "stop",       os_stop       },
     { "stopped",    os_stopped    },
-    { "post",       os_post       },
-    { "restart",    os_restart    },
     { NULL,         NULL          }
   };
   lua_getglobal(L, "os");

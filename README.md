@@ -40,6 +40,7 @@
 -   trace(...)
 -   throw(...)
 -   wrap(...)
+-   pcall(<func>/<name> [, ...])
 -   unwrap(str)
 -   compress(str [,<"deflate">/<"gzip">])
 -   uncompress(str [,<"deflate">/<"gzip">])
@@ -47,12 +48,6 @@
  **os functions** 
 -   os.version()
 -   os.pload(name [, ...]) #1
--   os.declare(name, func [, <true>/<false>])
--   os.undeclare(name)
--   os.rpcall([func, ] name [, ...])
--   os.deliver(name, mask, receiver [, ...])
--   os.caller()
--   os.responser()
 -   os.compile(fname [, oname])
 -   os.getcwd()
 -   os.name()
@@ -65,12 +60,18 @@
 -   os.id()
 -   os.post(func [, ...])
 -   os.wait([expires])
--   os.restart()
 -   os.exit()
 -   os.stop()
 -   os.stopped()
 -   os.debugging()
 
+ **rpc functions** 
+-   rpc.create(name, func [, <true>/<false>])
+-   rpc.remove(name)
+-   rpc.deliver(name, mask, receiver [, ...])
+-   rpc.caller()
+-   rpc.responser()
+ 
  **coroutine functions**
 -   co:close(func)
 -   co:dispatch(func)

@@ -10,10 +10,10 @@
 --------------------------------------------------------------------------------
 
 local proto_type = require("cluster.protocol");
-local r_deliver  = os.r_deliver;
-local r_bind     = os.r_bind;
-local r_unbind   = os.r_unbind;
-local r_response = os.r_response;
+local r_deliver  = rpc.r_deliver;
+local r_bind     = rpc.r_bind;
+local r_unbind   = rpc.r_unbind;
+local r_response = rpc.r_response;
 
 local format = string.format;
 local r_handlers = {};
@@ -279,7 +279,7 @@ function main(host, port)
     error(format("socket connect to %s:%d error", host, port));
 	return;
   end
-  os.lookout(on_lookout);
+  rpc.lookout(on_lookout);
   if not connect_members(socket, protocol) then
     return;
   end
@@ -290,7 +290,7 @@ function main(host, port)
     os.wait();
   end
   
-  os.lookout(nil);
+  rpc.lookout(nil);
   socket:close();
   server:close();
 end
