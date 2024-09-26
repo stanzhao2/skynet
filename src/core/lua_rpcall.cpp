@@ -815,7 +815,7 @@ SKYNET_API int lua_r_deliver(const char* name, const char* data, size_t size, si
   for (; find != val.end(); ++find) {
     auto rcb = find->rcb;
     auto who = find->who;
-    count += dispatch(topic, rcb, data, size, mask, receiver, caller, rcf, sn);
+    count += dispatch(topic, rcb, data, size, mask, who, caller, rcf, sn);
   }
   return count;
 }
