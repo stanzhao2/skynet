@@ -4,7 +4,7 @@
 local timer = {}
 
 ---@param ms number 定时毫秒
----@param func fun() 任务函数
+---@param func fun():integer 任务函数
 function timer:expires(ms, func) end
 
 function timer:cancel() end

@@ -23,14 +23,12 @@ struct class_timer final {
       if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
         lua_ferror("%s\n", luaL_checkstring(L, -1));
       }
-      int what = lua_type(L, -1);
-      if (what == LUA_TBOOLEAN) {
-        if (lua_toboolean(L, -1) == 0) {
-          return;
-        }
+      size_t expires = lua_tointeger(L, -1);
+      if (expires == 0) {
+        return;
       }
       unref.cancel();
-      on_timer(L, timeout, handler);
+      on_timer(L, (expires ? expires : timeout), handler);
     });
     return 0;
   }
