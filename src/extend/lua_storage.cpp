@@ -33,20 +33,16 @@ static int finishpcall(lua_State *L, int status, lua_KContext extra) {
   if (luai_unlikely(status != LUA_OK && status != LUA_YIELD)) {  /* error? */
     lua_error(L);
   }
-  if (lua_toboolean(L, -1) == 0) {
-    lua_pushboolean(L, 0);
-    lua_pushnil(L);
-    return 2;
+  int top = lua_gettop(L);
+  if (top < context->top) {
+    luaL_error(L, "no result");
   }
-  int top = context->top;
-  std::string key = std::move(context->key);
-  std::string old_value = std::move(context->old_value);
-
-  lua_settop(L, top);
-  lua_wrap(L, top - 2);
+  lua_wrap(L, top - context->top + 1);
   size_t size = 0;
   const char* data = luaL_checklstring(L, -1, &size);
 
+  std::string key = std::move(context->key);
+  std::string old_value = std::move(context->old_value);
   _storage[key] = std::move(std::string(data, size));
   if (old_value.empty()) {
     lua_pushboolean(L, 1);
@@ -85,32 +81,24 @@ static int luac_set(lua_State* L) {
 static int luac_set_if(lua_State* L) {
   const char* name = luaL_checkstring(L, 1);
   luaL_checktype(L, 2, LUA_TFUNCTION);
-  int top = lua_gettop(L);
-  if (top < 3) {
-    luaL_error(L, "no values");
-  }
-  int argc = top - 2;
-  lua_pushvalue(L, 2); /* push function to stack */
-  for (int i = 3; i <= top; i++) {
-    lua_pushvalue(L, i); /* push params to stack */
-  }
   pcall_context* ctx = new pcall_context(_mutex);
   if (!ctx) {
     lua_pushboolean(L, 0);
     lua_pushnil(L);
     return 2;
   }
+  ctx->top = lua_gettop(L);
   ctx->key = name;
-  ctx->top = top;
   auto iter = _storage.find(ctx->key);
   if (iter != _storage.end()) {
     ctx->old_value = iter->second;
   }
+  int count = 0;
   if (!ctx->old_value.empty()) {
     lua_pushlstring(L, ctx->old_value.c_str(), ctx->old_value.size());
-    argc += lua_unwrap(L);
+    count = lua_unwrap(L);
   }
-  int status = lua_pcall_k(L, argc, 1, ctx, finishpcall);
+  int status = lua_pcall_k(L, count, LUA_MULTRET, ctx, finishpcall);
   return finishpcall(L, status, (lua_KContext)ctx);
 }
 

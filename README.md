@@ -151,7 +151,7 @@
  **storage functions**
 -   storage.exist(key)
 -   storage.set(key, value [, ...])
--   storage.set_if(key, checkfunc, value [, ...])
+-   storage.set_if(key, func)
 -   storage.get(key)
 -   storage.erase(key)
 -   storage.empty()

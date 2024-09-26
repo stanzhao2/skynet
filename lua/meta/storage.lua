@@ -16,11 +16,9 @@ function storage.set(key, ...) end
 
 
 ---设置一个 key-value 对
----@overload fun(key:string, handler:fun(old_value:any):any):any
 ---@param key string
----@param checkfunc fun(new_value:..., old_value:...):boolean
----@param value ... any
-function storage.set_if(key, checkfunc, value) end
+---@param func fun(old:...):any...
+function storage.set_if(key, func) end
 
 --- 获取一个 key-value 值
 ---@param key string
