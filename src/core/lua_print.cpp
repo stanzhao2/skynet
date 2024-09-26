@@ -75,7 +75,7 @@ static const char* fileline(lua_State* L) {
 static const char* localtime(char* out, size_t size) {
   time_t now = time(NULL);
   struct tm* ptm = localtime(&now);
-  snprintf(out, size, "#%d [%02d:%02d:%02d] ", getpid(), ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+  snprintf(out, size, "[%02d/%02d %02d:%02d:%02d] ", ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
   return out;
 }
 
