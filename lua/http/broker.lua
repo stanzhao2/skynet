@@ -11,9 +11,11 @@
 
 --------------------------------------------------------------------------------
 
-local format = string.format;
-local insert = table.insert;
-local concat = table.concat;
+local format   = string.format;
+local split    = string.split;
+local insert   = table.insert;
+local concat   = table.concat;
+local unescape = io.http.unescape;
 
 --------------------------------------------------------------------------------
 
@@ -162,14 +164,13 @@ local function co_on_request(method, session)
 
   local query = context.query;
   if query and #query > 0 then
-    local t = string.split(query, "&");
+    local t = split(query, "&");
     query = {};
     for k, v in pairs(t) do
-      local s = string.split(v, "=");
-      query[s[1]] = io.http.unescape(s[2]);
+      local s = split(v, "=");
+      query[s[1]] = unescape(s[2]);
     end
   end
-
   local status = 200;
   local ok, result = pcall(method, query, body);
   if not ok then
