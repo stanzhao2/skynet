@@ -9,7 +9,7 @@ static const char* luapath[] = {
 };
 
 static const char* luacpath[] = {
-  "lib" LUA_DIRSEP "lua" LUA_DIRSEP "?" LIBEXT, NULL
+  "lib" LUA_DIRSEP "lua" LUA_DIRSEP "?." LIBEXT, NULL
 };
 
 /********************************************************************************/
