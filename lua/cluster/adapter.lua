@@ -18,6 +18,13 @@ local r_response = rpc.r_response;
 local format = string.format;
 local r_handlers = {};
 local active_sessions = {};
+local const_max <const> = 0xffff;
+
+--------------------------------------------------------------------------------
+
+local function is_local(who)
+  return who <= const_max;
+end
 
 --------------------------------------------------------------------------------
 
@@ -37,7 +44,7 @@ end
 
 local function lua_bind(info, caller)
   local name = info.name;
-  if caller > 0xffff then
+  if not is_local(caller) then
 	r_bind(name, caller, info.rcb);
   end
   if not r_handlers[caller] then
@@ -50,7 +57,7 @@ end
 --------------------------------------------------------------------------------
 
 local function lua_unbind(name, caller)
-  if caller > 0xffff then    
+  if not is_local(caller) then
 	r_unbind(name, caller);
   end
   r_handlers[caller][name] = nil;
@@ -68,12 +75,14 @@ local function ws_on_error(peer, msg)
   end
   --cancel bind for the session
   for caller, v in pairs(r_handlers) do
-    if caller > 0xffff and caller & 0xffff == id then
-	  for name, info in pairs(v) do
-	    lua_unbind(name, caller);
+    if not is_local(caller) then
+      if caller & const_max == id then
+	    for name, info in pairs(v) do
+	      lua_unbind(name, caller);
+	    end
+	    r_handlers[caller] = nil;
 	  end
-	  r_handlers[caller] = nil;
-	end
+    end
   end
 end
 
@@ -138,11 +147,11 @@ local function on_lookout(info)
   end
   local id;
   if what == proto_type.deliver then
-    id = info.who & 0xffff;
+    id = info.who & const_max;
 	info.who = info.who >> 16;
   end
   if what == proto_type.response then
-    id = info.caller & 0xffff;
+    id = info.caller & const_max;
 	info.caller = info.caller >> 16;
   end
   local session = active_sessions[id];
@@ -169,7 +178,7 @@ local function new_session(peer)
   peer:receive(bind(ws_on_receive, peer));
 
   for caller, bounds in pairs(r_handlers) do
-    if caller <= 0xffff then
+    if is_local(caller) then
 	  for name, info in pairs(bounds) do
 	    peer:send(wrap(info));
       end
