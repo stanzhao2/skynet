@@ -37,6 +37,9 @@ end
 
 local function lua_bind(info, caller)
   local name = info.name;
+  if caller > 0xffff then
+	r_bind(name, caller, info.rcb);
+  end
   if not r_handlers[caller] then
     r_handlers[caller] = {};
   end
@@ -109,7 +112,6 @@ local function ws_on_receive(peer, data, ec)
 	local rcb    = info.rcb;
 	local caller = info.caller << 16 | id;
 	lua_bind(info, caller);
-	r_bind(name, caller, rcb);
 	return;
   end
   if what == proto_type.unbind then
