@@ -1,7 +1,6 @@
 
 
 #include "../skynet.h"
-#include "../skynet_lua.h"
 #include "lua_global.h"
 #include "lua_bind.h"
 #include "lua_dofile.h"
