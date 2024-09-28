@@ -67,10 +67,7 @@ SKYNET_API int luaopen_pcall(lua_State* L) {
     { "xpcall",   luac_xpcall   }, /* xpcall(f, msgh [, arg1, ...]) */
     { NULL,       NULL          }
   };
-  lua_getglobal(L, LUA_GNAME);
-  luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1); /* pop '_G' from stack */
-  return 0;
+  return new_module(L, LUA_GNAME, methods);
 }
 
 /********************************************************************************/

@@ -163,20 +163,11 @@ struct class_list final {
   }
   static int open_library(lua_State* L) {
     init_metatable(L);
-    bool need_pop = true;
-    lua_getglobal(L, "std");
-    if (lua_type(L, -1) != LUA_TTABLE) {
-      lua_pop(L, 1);
-      lua_newtable(L);
-      need_pop = false;
-    }
     const luaL_Reg methods[] = {
       { "list",   create    },
       { NULL,     NULL      },
     };
-    luaL_setfuncs(L, methods, 0);
-    need_pop ? lua_pop(L, 1) : lua_setglobal(L, "std");
-    return 0;
+    return new_module(L, "std", methods);
   }
   std::list<int> data;
   std::list<int>::iterator iter;

@@ -165,10 +165,7 @@ int luaopen_print(lua_State* L) {
     { "throw",    luac_throw    }, /* throw (arg1 [, ...]) */
     { NULL,       NULL          }
   };
-  lua_getglobal(L, LUA_GNAME);
-  luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1); /* pop '_G' from stack */
-  return 0;
+  return new_module(L, LUA_GNAME, methods);
 }
 
 SKYNET_API void lua_printf(color_type color, const char* fmt, ...) {

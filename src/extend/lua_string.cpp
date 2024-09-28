@@ -81,10 +81,7 @@ SKYNET_API int luaopen_lstring(lua_State* L) {
     { "isalpha",  luac_isalpha  }, /* string.isalpha(s)  */
     { NULL,       NULL          }
   };
-  lua_getglobal(L, "string");
-  luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1); /* pop 'string' from stack */
-  return 0;
+  return new_module(L, "string", methods);
 }
 
 /********************************************************************************/

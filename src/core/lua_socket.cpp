@@ -97,10 +97,7 @@ struct ssl_context final {
       { "context",  create   }, /* io.context() */
       { NULL,       NULL     }
     };
-    lua_getglobal(L, "io");
-    luaL_setfuncs(L, methods, 0);
-    lua_pop(L, 1); /* pop 'io' from stack */
-    return 0;
+    return new_module(L, "io", methods);
   }
   ssl::context ctx;
 };
@@ -375,10 +372,7 @@ struct lua_socket final {
       { "socket",  create   }, /* os.timer() */
       { NULL,      NULL     }
     };
-    lua_getglobal(L, "io");
-    luaL_setfuncs(L, methods, 0);
-    lua_pop(L, 1); /* pop '_G' from stack */
-    return 0;
+    return new_module(L, "io", methods);
   }
   typeof<io::socket> socket;
 };
@@ -490,10 +484,7 @@ struct lua_acceptor final {
       { "server",   create   }, /* os.ssl_context() */
       { NULL,       NULL     }
     };
-    lua_getglobal(L, "io");
-    luaL_setfuncs(L, methods, 0);
-    lua_pop(L, 1); /* pop '_G' from stack */
-    return 0;
+    return new_module(L, "io", methods);
   }
   typeof<io_socket_server> server;
 };

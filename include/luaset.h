@@ -105,6 +105,18 @@ _Ty* checkudata(lua_State* L, int index, const char* name) {
   return (_Ty*)luaL_checkudata(L, index, name);
 }
 
+inline int new_module(lua_State* L, const char* name, const luaL_Reg methods[]) {
+  lua_getglobal(L, name);
+  int type = lua_type(L, -1);
+  if (type == LUA_TNIL) {
+    lua_pop(L, 1); /* pop nil from stack */
+    lua_newtable(L);
+  }
+  luaL_setfuncs(L, methods, 0);
+  (type == LUA_TNIL) ? lua_setglobal(L, name) : lua_pop(L, 1);
+  return 0;
+}
+
 inline int newmetatable(lua_State* L, const char* name, const luaL_Reg methods[]) {
   if (!luaL_newmetatable(L, name)) {
     return 0;

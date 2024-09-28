@@ -159,11 +159,7 @@ SKYNET_API int luaopen_sheet(lua_State* L) {
     { "import",   luac_import },
     { NULL,         NULL      }
   };
-
-  lua_getglobal(L, "table");
-  luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1); /* pop 'table' from stack */
-  return 0;
+  return new_module(L, "table", methods);
 }
 
 /********************************************************************************/

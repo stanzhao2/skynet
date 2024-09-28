@@ -611,18 +611,12 @@ static void setfield(lua_State* L, int i, const char* name, const luaL_Reg m[]) 
 /***********************************************************************************/
 
 SKYNET_API int luaopen_base64(lua_State* L) {
-  luaL_checkversion(L);
-  lua_getglobal(L, LUA_GNAME);
-  lua_newtable(L);
   const luaL_Reg methods[] = {
     { "encode",       base64_encode     },
     { "decode",       base64_decode     },
     { NULL,		        NULL              }
   };
-  luaL_setfuncs(L, methods, 0);
-  lua_setfield(L, -2, "base64");
-  lua_pop(L, 1);
-  return 0;
+  return new_module(L, "base64", methods);
 }
 
 /***********************************************************************************/

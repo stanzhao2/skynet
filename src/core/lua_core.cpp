@@ -333,9 +333,7 @@ SKYNET_API int luaopen_core(lua_State* L) {
     { "stopped",    os_stopped    },
     { NULL,         NULL          }
   };
-  lua_getglobal(L, "os");
-  luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1); /* pop 'os' from stack */
+  new_module(L, "os", methods);
   return openlibs(L, core_modules);
 }
 

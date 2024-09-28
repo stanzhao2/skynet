@@ -81,10 +81,7 @@ public:
       { "timer",  create   }, /* os.timer() */
       { NULL,     NULL     }
     };
-    lua_getglobal(L, "os");
-    luaL_setfuncs(L, methods, 0);
-    lua_pop(L, 1); /* pop 'os' from stack */
-    return 0;
+    return new_module(L, "os", methods);
   }
 };
 

@@ -45,15 +45,12 @@ static int gzip_inflate(lua_State *L) {
 /********************************************************************************/
 
 SKYNET_API int luaopen_deflate(lua_State* L) {
-  lua_getglobal(L, LUA_GNAME);
   const luaL_Reg methods[] = {
     { "compress",   gzip_deflate   },  /* compress   */
     { "uncompress", gzip_inflate   },  /* uncompress */
     { NULL,         NULL           },
   };
-  luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1);
-  return 0;
+  return new_module(L, LUA_GNAME, methods);
 }
 
 /********************************************************************************/

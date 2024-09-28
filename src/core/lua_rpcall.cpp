@@ -671,9 +671,7 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
     { "r_response", luac_r_response },
     { NULL,         NULL            }
   };
-  lua_newtable(L);
-  luaL_setfuncs(L, methods, 0);
-  lua_setglobal(L, "rpc");
+  new_module(L, "rpc", methods);
   return check_timeout(L, 1000);
 }
 

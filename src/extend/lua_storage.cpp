@@ -164,7 +164,6 @@ static int luac_clear(lua_State* L) {
 /*******************************************************************************/
 
 SKYNET_API int luaopen_storage(lua_State* L) {
-  lua_newtable(L);
   const luaL_Reg methods[] = {
     { "exist",    luac_exist  },
     { "size",     luac_size   },
@@ -176,9 +175,7 @@ SKYNET_API int luaopen_storage(lua_State* L) {
     { "clear",    luac_clear  },
     { NULL,       NULL        }
   };
-  luaL_setfuncs(L, methods, 0);
-  lua_setglobal(L, "storage");
-  return 0;
+  return new_module(L, "storage", methods);
 }
 
 /*******************************************************************************/

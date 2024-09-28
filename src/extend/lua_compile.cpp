@@ -50,10 +50,7 @@ SKYNET_API int luaopen_compile(lua_State* L) {
     { "compile",  luac_compile  }, /* os.compile(inname, outname) */
     { NULL,       NULL          }
   };
-  lua_getglobal(L, "os");
-  luaL_setfuncs(L, methods, 0);
-  lua_pop(L, 1); /* pop 'os' from stack */
-  return 0;
+  return new_module(L, "os", methods);
 }
 
 /********************************************************************************/
