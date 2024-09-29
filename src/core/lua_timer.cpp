@@ -1,5 +1,6 @@
 
 
+#include "../skynet.h"
 #include "lua_timer.h"
 
 /********************************************************************************/
@@ -36,13 +37,17 @@ struct class_timer final {
 
 public:
   inline static const char* name() {
-    return "lua timer";
+    return "skynet timer";
   }
   inline static class_timer* __this(lua_State* L) {
     return checkudata<class_timer>(L, 1, name());
   }
   inline static int __gc(lua_State* L) {
-    __this(L)->~class_timer();
+    auto self = __this(L);
+    if (is_debugging()) {
+      lua_ftrace("DEBUG: %s will gc\n", name());
+    }
+    self->~class_timer();
     return 0;
   }
   static int expires(lua_State* L) {

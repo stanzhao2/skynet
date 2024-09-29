@@ -1,5 +1,6 @@
 
 
+#include "../skynet.h"
 #include "lua_list.h"
 
 /********************************************************************************/
@@ -9,7 +10,7 @@ struct class_list final {
     : iter(data.end()) {
   }
   inline static const char* name() {
-    return "lua list";
+    return "skynet list";
   }
   inline static class_list* __this(lua_State* L) {
     return checkudata<class_list>(L, 1, name());
@@ -25,7 +26,11 @@ struct class_list final {
   }
   static int __gc(lua_State* L) {
     clear(L);
-    __this(L)->~class_list();
+    auto self = __this(L);
+    if (is_debugging()) {
+      lua_ftrace("DEBUG: %s will gc\n", name());
+    }
+    self->~class_list();
     return 0;
   }
   static int size(lua_State* L) {

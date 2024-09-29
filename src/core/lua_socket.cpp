@@ -1,5 +1,6 @@
 
 
+#include "../skynet.h"
 #include "lua_socket.h"
 
 /********************************************************************************/
@@ -26,13 +27,16 @@ struct ssl_context final {
     : ctx(ssl::context::tlsv12) {
   }
   inline static const char* name() {
-    return "ssl context";
+    return "skynet ssl-context";
   }
   inline static ssl_context* __this(lua_State* L) {
     return checkudata<ssl_context>(L, 1, name());
   }
   static int __gc(lua_State* L) {
     auto self = __this(L);
+    if (is_debugging()) {
+      lua_ftrace("DEBUG: %s will gc\n", name());
+    }
     self->~ssl_context();
     return 0;
   }
@@ -129,13 +133,16 @@ inline typeof<Ty> ref_new_object(lua_State* L, std::string& what) {
 
 struct lua_socket final {
   inline static const char* name() {
-    return "lua socket";
+    return "skynet socket";
   }
   inline static lua_socket* __this(lua_State* L) {
     return checkudata<lua_socket>(L, 1, name());
   }
   static int __gc(lua_State* L) {
     auto self = __this(L);
+    if (is_debugging()) {
+      lua_ftrace("DEBUG: %s(#%d) will gc\n", name(), self->socket->id());
+    }
     self->~lua_socket();
     return 0;
   }
@@ -381,13 +388,16 @@ struct lua_socket final {
 
 struct lua_acceptor final {
   inline static const char* name() {
-    return "lua server";
+    return "skynet server";
   }
   inline static lua_acceptor* __this(lua_State* L) {
     return checkudata<lua_acceptor>(L, 1, name());
   }
   static int __gc(lua_State* L) {
     auto self = __this(L);
+    if (is_debugging()) {
+      lua_ftrace("DEBUG: %s(#%d) will gc\n", name(), self->server->native_handle()->id());
+    }
     self->~lua_acceptor();
     return 0;
   }
