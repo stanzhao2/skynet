@@ -38,6 +38,7 @@ local function on_error(peer, msg)
   if session then
     active_sessions[peer] = nil;
     peer:close();
+    error(format("cluster member error: %s", msg));
   end
 end
 
@@ -45,7 +46,7 @@ end
 
 local function on_receive(peer, data, ec)
   if ec then
-    on_error(peer, "receive error");
+    on_error(peer, ec);
 	return;
   end
 end
@@ -53,11 +54,11 @@ end
 --------------------------------------------------------------------------------
 
 local function new_session(peer)
-  local port = peer:getheader("xforword-port");
+  local port = peer:getheader(proto_type.cluster.port);
   if not port then
     return false;
   end
-  local host = peer:getheader("xforword-host");
+  local host = peer:getheader(proto_type.cluster.host);
   if not host then
     host = peer:endpoint().address;
   end
@@ -68,6 +69,7 @@ local function new_session(peer)
   };
   active_sessions[peer] = session;
   sendto_member(session);
+  print(format("cluster member accept from %s", host));
   return true;
 end
 
@@ -75,7 +77,7 @@ end
 
 local function on_accept(peer, ec)
   if ec then
-    on_error(peer, "accept error");
+    on_error(peer, ec);
 	return;
   end
   if not new_session(peer) then

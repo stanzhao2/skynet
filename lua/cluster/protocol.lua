@@ -10,6 +10,7 @@
 --------------------------------------------------------------------------------
 
 local protocol = {
+  cluster  = {host = "cluster-port", port = "cluster-host", join = "cluster-join"},
   ready    = "ready",
   forword  = "forword",
   deliver  = "deliver",

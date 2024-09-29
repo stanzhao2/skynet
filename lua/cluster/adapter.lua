@@ -163,7 +163,7 @@ end
 --------------------------------------------------------------------------------
 
 local function new_session(peer)
-  local what = peer:getheader("xforword-join");
+  local what = peer:getheader(proto_type.cluster.join);
   if what ~= "skynet-lua" then
     return false;
   end
@@ -217,7 +217,7 @@ local function new_connect(host, port, protocol)
     return true;
   end
   local peer = io.socket(protocol);
-  peer:setheader("xforword-join", "skynet-lua");
+  peer:setheader(proto_type.cluster.join, "skynet-lua");
   if peer:connect(host, port) then
     new_session(peer);
 	return true;
@@ -284,7 +284,7 @@ function main(host, port)
   host = host or "127.0.0.1";
   port = port or 80;
   local socket = io.socket(protocol);
-  socket:setheader("xforword-port", lport);
+  socket:setheader(proto_type.cluster.port, lport);
   
   if not socket:connect(host, port) then
     error(format("socket connect to %s:%d error", host, port));
