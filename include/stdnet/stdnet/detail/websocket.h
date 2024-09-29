@@ -184,16 +184,14 @@ namespace detail {
       }
       _encoder.encode(data, size, opcode, false,
         [&](const std::string& data, ws::opcode_type, bool) {
+          error_code ec;
           const char* begin = data.c_str();
           size_t size = data.size();
           if (is_idle()) {
-            error_code ec;
             native_socket::send(begin, size, ec);
           }
           else {
-            native_socket::async_send(begin, size,
-              [](const error_code&, size_t) {}
-            );
+            native_socket::async_send(begin, size, [](const error_code&, size_t) {});
           }
         }
       );

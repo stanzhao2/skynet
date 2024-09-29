@@ -114,10 +114,6 @@ namespace detail {
     }
 
     void flush_next() {
-      if (_closed || !is_open()) {
-        clear();
-        return;
-      }
       if (send_queue.empty()) {
         if (_closed) {
           error_code ec;
@@ -240,11 +236,14 @@ namespace detail {
         return;
       }
       error_code ec;
+      shutdown(
+        shutdown_type::shutdown_receive, ec
+      );
       if (is_idle()) {
         ip_tcp_socket::close(ec);
       }
-      _timer.cancel();
       _closed = true;
+      _timer.cancel();
     }
 
     virtual bool is_native() const {
@@ -357,6 +356,8 @@ namespace detail {
       if (buff.data()) {
         memcpy(buff.data(), buffers.data(), size);
       }
+      wait_send(buff, handler);
+      return;
       auto self(shared_from_this());
       get_executor()->post([handler, buff, this, self]() {
         wait_send(buff, handler);
