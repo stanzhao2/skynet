@@ -738,6 +738,9 @@ struct lua_newrpc final {
     auto mask      = luaL_optinteger(L, 1, 0);
     auto receiver  = luaL_optinteger(L, 2, 0);
     auto timeout   = luaL_optinteger(L, 3, max_expires);
+    if (timeout < 1000) {
+      timeout = 1000;
+    }
     auto self = newuserdata<lua_newrpc>(L, name());
     self->mask     = mask;
     self->receiver = receiver;
