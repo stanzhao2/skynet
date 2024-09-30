@@ -468,6 +468,9 @@ static int luac_invoke(lua_State* L) {
   const char* name = luaL_checkstring(L, 1);
   size_t mask = luaL_checkinteger(L, 2);
   size_t receiver = luaL_checkinteger(L, 3);
+  if (mask == 0 && receiver == 0) {
+    mask = rand() + 1;
+  }
   int rcf = lua_ref(L, 4); /* callback */
   size_t size = 0;
   const char* data = nullptr;
@@ -509,7 +512,9 @@ static int luac_rpcall(lua_State* L) {
   const char* name = luaL_checkstring (L, 1);
   size_t mask      = luaL_checkinteger(L, 2);
   size_t receiver  = luaL_checkinteger(L, 3);
-
+  if (mask == 0 && receiver == 0) {
+    mask = rand() + 1;
+  }
   size_t size = 0;
   const char* data = nullptr;
   int argc = lua_gettop(L) - 1;
@@ -681,7 +686,6 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
     { "remove",     luac_undeclare  },
     { "call",       luac_rpcall     },
     { "deliver",    luac_deliver    },
-    { "call",       luac_rpcall     },
     { "caller",     luac_r_caller   },
     { "responser",  luac_r_handler  },
 
