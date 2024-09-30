@@ -720,6 +720,9 @@ struct lua_newrpc final {
   static int set_timeout(lua_State* L) {
     auto self = __this(L);
     self->timeout = luaL_checkinteger(L, 1);
+    if (self->timeout < 1000) {
+      self->timeout = 1000;
+    }
     return 0;
   }
   static void init_metatable(lua_State* L) {
