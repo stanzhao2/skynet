@@ -70,15 +70,15 @@
 -   rpc.create(name, func [, <true>/<false>])
 -   rpc.new([mask] [, receiver] [, timeout]) #9
 -   rpc.remove(name)
--   rpc.deliver(name, mask, receiver [, ...])
 -   rpc.caller()
 -   rpc.responser()
 
  **rpcall functions** 
+-   rpcall(name, [, callback] [, ...])
 -   rpcall:mask(value)
 -   rpcall:receiver(value)
 -   rpcall:timeout(ms)
--   rpcall(name, [, callback, ...])
+-   rpcall:dispatch(name, [, ...])
  
  **coroutine functions**
 -   co:close(func)
