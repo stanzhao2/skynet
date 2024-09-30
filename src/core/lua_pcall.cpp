@@ -1,7 +1,6 @@
 
 
 #include "lua_pcall.h"
-#include "lua_rpcall.h"
 
 /********************************************************************************/
 
@@ -51,9 +50,6 @@ static int luac_xpcall(lua_State *L) {
 }
 
 static int luac_pcall(lua_State* L) {
-  if (lua_type(L, 1) == LUA_TSTRING) {
-    return lua_l_rpcall(L);
-  }
   lua_pushcfunction(L, traceback);
   lua_insert(L, 2);
   return luac_xpcall(L);

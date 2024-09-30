@@ -172,7 +172,7 @@ local function co_on_request(method, session)
     end
   end
   local status = 200;
-  local ok, result = pcall(method, query, body);
+  local ok, result = rpc.call(method, 0, 0, query, body);
   if not ok then
     status = 500;
   end

@@ -466,7 +466,9 @@ static int luac_deliver(lua_State* L) {
 /* async wait return values */
 static int luac_invoke(lua_State* L) {
   const char* name = luaL_checkstring(L, 1);
-  int rcf = lua_ref(L, 2);
+  size_t mask = luaL_checkinteger(L, 2);
+  size_t receiver = luaL_checkinteger(L, 3);
+  int rcf = lua_ref(L, 4); /* callback */
   size_t size = 0;
   const char* data = nullptr;
   int argc = lua_gettop(L) - 2;
@@ -477,7 +479,7 @@ static int luac_invoke(lua_State* L) {
   auto sn = next_sn();
   auto service = lua_service();
   auto caller = service->id();
-  int count = lua_r_deliver(name, data, size, rand(), 0, caller, rcf, sn);
+  int count = lua_r_deliver(name, data, size, mask, receiver, caller, rcf, sn);
   if (count == 0) {
     std::string fname(name);
     service->post([rcf, fname]() {
@@ -501,10 +503,13 @@ static int luac_invoke(lua_State* L) {
 
 static int luac_rpcall(lua_State* L) {
   /* async call */
-  if (lua_type(L, 2) == LUA_TFUNCTION) {
+  if (lua_type(L, 4) == LUA_TFUNCTION) {
     return luac_invoke(L);
   }
-  const char* name = luaL_checkstring(L, 1);
+  const char* name = luaL_checkstring (L, 1);
+  size_t mask      = luaL_checkinteger(L, 2);
+  size_t receiver  = luaL_checkinteger(L, 3);
+
   size_t size = 0;
   const char* data = nullptr;
   int argc = lua_gettop(L) - 1;
@@ -523,7 +528,7 @@ static int luac_rpcall(lua_State* L) {
     rcf = lua_ref(main, -1);
     lua_pop(main, 1);
   }
-  int count = lua_r_deliver(name, data, size, sn, 0, caller, rcf, sn);
+  int count = lua_r_deliver(name, data, size, mask, receiver, caller, rcf, sn);
   if (count == 0) {
     if (rcf > 0) {
       lua_unref(L, rcf);
@@ -674,7 +679,9 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
     { "lookout",    luac_lookout    },
     { "create",     luac_declare    },
     { "remove",     luac_undeclare  },
+    { "call",       luac_rpcall     },
     { "deliver",    luac_deliver    },
+    { "call",       luac_rpcall     },
     { "caller",     luac_r_caller   },
     { "responser",  luac_r_handler  },
 
@@ -693,10 +700,6 @@ SKYNET_API int lua_l_lookout(lua_CFunction f) {
   watcher_ios = lua_service()->id();
   watcher_cfn = f;
   return LUA_OK;
-}
-
-SKYNET_API int lua_l_rpcall(lua_State* L) {
-  return luac_rpcall(L);
 }
 
 SKYNET_API int lua_r_unbind(const char* name, size_t who, int* opt) {

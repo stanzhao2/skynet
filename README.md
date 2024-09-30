@@ -37,7 +37,6 @@
 
  **global functions**
 -   bind(func, [, ...])
--   pcall(<func [, ...]>/<name [, callback] [, ...]>)
 -   trace(...)
 -   throw(...)
 -   wrap(...)
@@ -67,6 +66,7 @@
 
  **rpc functions** 
 -   rpc.create(name, func [, <true>/<false>])
+-   rpc.call(name, mask, receiver, [, callback, ...]>)
 -   rpc.remove(name)
 -   rpc.deliver(name, mask, receiver [, ...])
 -   rpc.caller()
