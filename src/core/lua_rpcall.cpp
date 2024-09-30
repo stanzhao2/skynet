@@ -482,7 +482,8 @@ static int luac_invoke(lua_State* L) {
     std::string fname(name);
     service->post([rcf, fname]() {
       lua_State* L = lua_local();
-      lua_auto_unref unref(L, rcf);
+      lua_auto_revert revert(L);
+      lua_auto_unref  unref(L, rcf);
       lua_pushref(L, rcf);
       lua_pushboolean(L, 0);
       lua_pushfstring(L, "%s not found", fname.c_str());
