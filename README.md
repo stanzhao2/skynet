@@ -68,11 +68,17 @@
 
  **rpc functions** 
 -   rpc.create(name, func [, <true>/<false>])
--   rpc.call(name, mask, receiver, [, callback, ...]>)
+-   rpc.new([mask] [, receiver] [, timeout]) #9
 -   rpc.remove(name)
 -   rpc.deliver(name, mask, receiver [, ...])
 -   rpc.caller()
 -   rpc.responser()
+
+ **rpcall functions** 
+-   rpcall:mask(value)
+-   rpcall:receiver(value)
+-   rpcall:timeout(ms)
+-   rpcall(name, [, callback, ...]>)
  
  **coroutine functions**
 -   co:close(func)
@@ -198,3 +204,4 @@
 -  _#6: return ssl context object
 -  _#7: return coroutine object
 -  _#8: return skiplist object
+-  _#9: return rpcall object
