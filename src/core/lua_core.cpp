@@ -179,10 +179,30 @@ struct lua_coroutine final {
 
 static typeof<io::service> main_service;
 static const size_t init_clock = steady_clock();
+static thread_local int os_time_ref = 0;
 
 static int os_clock(lua_State *L) {
   const char* opt = luaL_optstring(L, 1, "s");
   auto now = steady_clock() - init_clock;
+  if (strcmp(opt, "ms") == 0) {
+    lua_pushinteger(L, (lua_Integer)now);
+  }else{
+    lua_pushnumber(L, (lua_Number)(now) / 1000.0f);
+  }
+  return 1;
+}
+
+static int os_time(lua_State *L) {
+  if (lua_type(L, 1) != LUA_TSTRING) {
+    lua_pushref(L, os_time_ref);
+    lua_insert(L, 1);
+    if (lua_pcall(L, lua_gettop(L) - 1, 1, 0) != LUA_OK) {
+      lua_error(L);
+    }
+    return 1;
+  }
+  auto now = system_clock();
+  const char* opt = luaL_optstring(L, 1, "s");
   if (strcmp(opt, "ms") == 0) {
     lua_pushinteger(L, (lua_Integer)now);
   }else{
@@ -315,10 +335,16 @@ SKYNET_API int luaopen_core(lua_State* L) {
   if (!main_service) {
     main_service = io::service::local();
   }
+  lua_getglobal(L, "os");
+  lua_getfield(L, -1, "time");
+  os_time_ref = lua_ref(L, -1);
+  lua_pop(L, 2);
+
   lua_coroutine::open_library(L);
   const luaL_Reg methods[] = {
     { "version",    os_version    },
     { "clock",      os_clock      },
+    { "time",       os_time       },
     { "dirsep",     os_dirsep     },
     { "debugging",  os_debugging  },
     { "wait",       os_wait       },

@@ -48,6 +48,8 @@
 -   os.version()
 -   os.pload(name [, ...]) #1
 -   os.compile(fname [, oname])
+-   os.clock(["ms"])
+-   os.time(["ms"])
 -   os.getcwd()
 -   os.name()
 -   os.coroutine() #7
