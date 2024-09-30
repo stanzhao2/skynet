@@ -707,6 +707,15 @@ struct lua_newrpc final {
     lua_remove(L, 1); /* remove self */
     return luac_rpcall(L);
   }
+  static int dispatch(lua_State* L) {
+    auto self = __this(L);
+    luaL_checktype(L, 2, LUA_TSTRING);
+    lua_pushinteger(L, (lua_Integer)self->mask);
+    lua_pushinteger(L, (lua_Integer)self->receiver);
+    lua_rotate(L, 3, 2);
+    lua_remove(L, 1); /* remove self */
+    return luac_deliver(L);
+  }
   static int set_mask(lua_State* L) {
     auto self = __this(L);
     self->mask = luaL_checkinteger(L, 1);
@@ -727,11 +736,12 @@ struct lua_newrpc final {
   }
   static void init_metatable(lua_State* L) {
     const luaL_Reg methods[] = {
+      { "dispatch", dispatch      },
       { "__call",   __call        },
       { "__gc",     __gc          },
       { "mask",     set_mask      },
-      { "receiver", set_receiver  },
       { "timeout",  set_timeout   },
+      { "receiver", set_receiver  },
       { NULL,       NULL          }
     };
     newmetatable(L, name(), methods);
@@ -766,7 +776,6 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
     { "create",     luac_declare    },
     { "new",        luac_create     },
     { "remove",     luac_undeclare  },
-    { "deliver",    luac_deliver    },
     { "caller",     luac_r_caller   },
     { "responser",  luac_r_handler  },
 
