@@ -199,14 +199,15 @@ static int os_time(lua_State *L) {
     if (lua_pcall(L, lua_gettop(L) - 1, 1, 0) != LUA_OK) {
       lua_error(L);
     }
-    return 1;
   }
-  auto now = system_clock();
-  const char* opt = luaL_optstring(L, 1, "s");
-  if (strcmp(opt, "ms") == 0) {
-    lua_pushinteger(L, (lua_Integer)now);
-  }else{
-    lua_pushnumber(L, (lua_Number)(now) / 1000.0f);
+  else {
+    auto now = system_clock();
+    const char* opt = luaL_optstring(L, 1, "s");
+    if (strcmp(opt, "ms") == 0) {
+      lua_pushinteger(L, (lua_Integer)now);
+    }else{
+      lua_pushnumber(L, (lua_Number)(now) / 1000.0f);
+    }
   }
   return 1;
 }
