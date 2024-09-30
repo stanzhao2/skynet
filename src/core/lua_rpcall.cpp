@@ -475,10 +475,21 @@ static int luac_invoke(lua_State* L) {
     data = luaL_checklstring(L, -1, &size);
   }
   auto sn = next_sn();
-  auto caller = lua_service()->id();
+  auto service = lua_service();
+  auto caller = service->id();
   int count = lua_r_deliver(name, data, size, rand(), 0, caller, rcf, sn);
   if (count == 0) {
-    lua_unref(L, rcf);
+    std::string fname(name);
+    service->post([rcf, fname]() {
+      lua_State* L = lua_local();
+      lua_auto_unref unref(L, rcf);
+      lua_pushref(L, rcf);
+      lua_pushboolean(L, 0);
+      lua_pushfstring(L, "%s not found", fname.c_str());
+      if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
+        lua_ferror("%s\n", lua_tostring(L, -1));
+      }
+    });
   }
   else {
     insert_of_pending(caller, rcf, sn);

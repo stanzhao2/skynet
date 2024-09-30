@@ -9,6 +9,8 @@
 
 ----------------------------------------------------------------------------
 
+local random = math.random;
+
 local function await(co, func, ...)
   local handler = bind(func, ...);
   local function callback(responser, ...)
@@ -18,7 +20,10 @@ local function await(co, func, ...)
       responser(handler(...));
     end
   end
-  return function(...)
+  return function(...)    
+    if type(co) == "table" then
+      co = co[random(1, #co)];
+    end
     co:dispatch(bind(callback, rpc.responser(), ...));
   end
 end
