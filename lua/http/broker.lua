@@ -11,11 +11,11 @@
 
 --------------------------------------------------------------------------------
 
-local format   = string.format;
-local split    = string.split;
-local insert   = table.insert;
-local concat   = table.concat;
-local unescape = io.http.unescape;
+local format     = string.format;
+local split      = string.split;
+local insert     = table.insert;
+local concat     = table.concat;
+local unescape   = io.http.unescape;
 
 --------------------------------------------------------------------------------
 
@@ -101,6 +101,7 @@ local http_mime_type = {
     json  = "application/json",
 };
 
+local rpcall = rpc.new(0, 0);
 local os_version = "skynet-lua" .. "/" .. os.version();
 
 --------------------------------------------------------------------------------
@@ -172,7 +173,7 @@ local function co_on_request(method, session)
     end
   end
   local status = 200;
-  local ok, result = rpc.call(method, 0, 0, query, body);
+  local ok, result = rpcall(method, query, body);
   if not ok then
     status = 500;
   end
