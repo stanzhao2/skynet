@@ -475,7 +475,7 @@ static int luac_invoke(lua_State* L) {
   int rcf = lua_ref(L, 5); /* callback */
   size_t size = 0;
   const char* data = nullptr;
-  int argc = lua_gettop(L) - 2;
+  int argc = lua_gettop(L) - 5;
   if (argc > 0) {
     lua_wrap(L, argc);
     data = luaL_checklstring(L, -1, &size);
@@ -519,7 +519,7 @@ static int luac_rpcall(lua_State* L) {
   }
   size_t size = 0;
   const char* data = nullptr;
-  int argc = lua_gettop(L) - 1;
+  int argc = lua_gettop(L) - 4;
   if (argc > 0) {
     lua_wrap(L, argc);
     data = luaL_checklstring(L, -1, &size);
