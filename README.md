@@ -78,7 +78,7 @@
 -   rpcall:mask(value)
 -   rpcall:receiver(value)
 -   rpcall:timeout(ms)
--   rpcall(name, [, callback, ...]>)
+-   rpcall(name, [, callback, ...])
  
  **coroutine functions**
 -   co:close(func)
