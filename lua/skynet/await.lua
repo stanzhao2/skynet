@@ -20,9 +20,12 @@ local function await(co, func, ...)
       responser(handler(...));
     end
   end
-  return function(...)    
-    if type(co) == "table" then
+  return function(...)
+    local what = type(co);
+    if what == "table" then
       co = co[random(1, #co)];
+    elseif what == "function" then
+      co = co();
     end
     co:dispatch(bind(callback, rpc.responser(), ...));
   end
