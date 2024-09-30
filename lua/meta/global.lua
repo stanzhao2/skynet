@@ -7,13 +7,6 @@
 ---@return fun(...)
 function bind(func, ...) end
 
---- 以安全的方式执行一个函数
---- 如果func是函数，则执行func,如果func是字符串，则执行rpc调用一个远端函数，这时候第二个参数可以是一个回调函数，如果设置了，则是一个异步rpc，否则是一个阻塞rpc
----@overload fun(name:string, callbakc?:fun(), ...)
----@param func fun()
----@param ... any 透传给要执行的function的参数
-function pcall(func, ...) end
-
 --- 打印调试信息，进程必须被编译成debug模式。
 function trace(...) end
 

@@ -9,6 +9,12 @@ rpc = {}
 ---@param invoke_by_remote? boolean 是否被远端调用，必须是其他进程
 function rpc.create(name, func, invoke_by_remote) end
 
+---@param name string rpc函数名
+---@param mask integer
+---@param receiver integer
+---@param callback? fun()
+function rpc.call(name, mask, receiver, callback, ...) end
+
 --- 注销一个rpc函数
 ---@param name string rpc函数名
 function rpc.remove(name) end

@@ -19,9 +19,18 @@ function os.getcwd() end
 ---@param oname? string
 function os.compile(fname, oname) end
 
+---返回程序运行时间
+---@param what? string "s"|"ms"
+---@return number|integer
+function os.clock(what) end
+
+---返回系统时间
+---@param what? string "s"|"ms"
+---@return number|integer
+function os.system_clock(what) end
+
 ---@return string 模块名字
 function os.name() end
-
 
 ---创建一个协程
 ---@return coroutine 协程
@@ -38,7 +47,6 @@ function os.dirsep() end
 ---创建一个目录，不可以递归创建
 ---@return boolean 是否成功
 function os.mkdir(path) end
-
 
 ---打开一个目录
 ---for file_name, is_dir in pairs(os.opendir(".")) do
