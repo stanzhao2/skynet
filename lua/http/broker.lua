@@ -171,8 +171,13 @@ local function co_on_request(method, session)
       local s = split(v, "=");
       query[s[1]] = unescape(s[2]);
     end
+  else
+    query = nil;
   end
   local status = 200;
+  if body == "" then
+    body = nil;
+  end
   local ok, result = rpcall(method, query, body);
   if not ok then
     status = 500;
