@@ -69,11 +69,11 @@ static inline int remove_of_pending(size_t sn) {
   return 0;
 }
 
-static void insert_of_pending(int caller, int rcf, size_t sn) {
+static void insert_of_pending(int caller, int rcf, size_t sn, size_t timeout) {
   pend_invoke pend;
   pend.caller  = caller;
   pend.rcf     = rcf;
-  pend.timeout = steady_clock() + max_expires;
+  pend.timeout = steady_clock() + timeout;
   invoke_pendings[sn] = pend;
 }
 
@@ -465,13 +465,14 @@ static int luac_deliver(lua_State* L) {
 
 /* async wait return values */
 static int luac_invoke(lua_State* L) {
-  const char* name = luaL_checkstring(L, 1);
-  size_t mask = luaL_checkinteger(L, 2);
-  size_t receiver = luaL_checkinteger(L, 3);
+  const char* name = luaL_checkstring (L, 1);
+  size_t mask      = luaL_checkinteger(L, 2);
+  size_t receiver  = luaL_checkinteger(L, 3);
+  size_t timeout   = luaL_checkinteger(L, 4);
   if (mask == 0 && receiver == 0) {
     mask = rand() + 1;
   }
-  int rcf = lua_ref(L, 4); /* callback */
+  int rcf = lua_ref(L, 5); /* callback */
   size_t size = 0;
   const char* data = nullptr;
   int argc = lua_gettop(L) - 2;
@@ -498,7 +499,7 @@ static int luac_invoke(lua_State* L) {
     });
   }
   else {
-    insert_of_pending(caller, rcf, sn);
+    insert_of_pending(caller, rcf, sn, timeout);
   }
   lua_pushboolean(L, count > 0 ? 1 : 0);
   return 1;
@@ -506,12 +507,13 @@ static int luac_invoke(lua_State* L) {
 
 static int luac_rpcall(lua_State* L) {
   /* async call */
-  if (lua_type(L, 4) == LUA_TFUNCTION) {
+  if (lua_type(L, 5) == LUA_TFUNCTION) {
     return luac_invoke(L);
   }
   const char* name = luaL_checkstring (L, 1);
   size_t mask      = luaL_checkinteger(L, 2);
   size_t receiver  = luaL_checkinteger(L, 3);
+  size_t timeout   = luaL_checkinteger(L, 4);
   if (mask == 0 && receiver == 0) {
     mask = rand() + 1;
   }
@@ -543,7 +545,7 @@ static int luac_rpcall(lua_State* L) {
     return 2;
   }
   /* run in coroutine */
-  insert_of_pending(caller, rcf, sn);
+  insert_of_pending(caller, rcf, sn, timeout);
   if (rcf > 0) {
     lua_settop(L, 0);
     return lua_yield(L, lua_gettop(L));
@@ -679,12 +681,85 @@ static int luac_r_deliver(lua_State* L) {
 
 /********************************************************************************/
 
+struct lua_newrpc final {
+  inline static const char* name() {
+    return "lua rpcall";
+  }
+  inline static lua_newrpc* __this(
+    lua_State* L, int index = 1) {
+    return checkudata<lua_newrpc>(L, index, name());
+  }
+  static int __gc(lua_State* L) {
+    auto self = __this(L);
+    if (is_debugging()) {
+      lua_ftrace("DEBUG: %s will gc\n", name());
+    }
+    self->~lua_newrpc();
+    return 0;
+  }
+  static int __call(lua_State* L) {
+    auto self = __this(L);
+    luaL_checktype(L, 2, LUA_TSTRING);
+    lua_pushinteger(L, (lua_Integer)self->mask);
+    lua_pushinteger(L, (lua_Integer)self->receiver);
+    lua_pushinteger(L, (lua_Integer)self->timeout);
+    lua_rotate(L, 3, 3);
+    lua_remove(L, 1); /* remove self */
+    return luac_rpcall(L);
+  }
+  static int set_mask(lua_State* L) {
+    auto self = __this(L);
+    self->mask = luaL_checkinteger(L, 1);
+    return 0;
+  }
+  static int set_receiver(lua_State* L) {
+    auto self = __this(L);
+    self->receiver = luaL_checkinteger(L, 1);
+    return 0;
+  }
+  static int set_timeout(lua_State* L) {
+    auto self = __this(L);
+    self->timeout = luaL_checkinteger(L, 1);
+    return 0;
+  }
+  static void init_metatable(lua_State* L) {
+    const luaL_Reg methods[] = {
+      { "__call",   __call        },
+      { "__gc",     __gc          },
+      { "mask",     set_mask      },
+      { "receiver", set_receiver  },
+      { "timeout",  set_timeout   },
+      { NULL,       NULL          }
+    };
+    newmetatable(L, name(), methods);
+    lua_pop(L, 1);
+  }
+  static int create(lua_State* L) {
+    auto mask      = luaL_optinteger(L, 1, 0);
+    auto receiver  = luaL_optinteger(L, 2, 0);
+    auto timeout   = luaL_optinteger(L, 3, max_expires);
+    auto self = newuserdata<lua_newrpc>(L, name());
+    self->mask     = mask;
+    self->receiver = receiver;
+    self->timeout  = timeout;
+    return 1;
+  }
+  size_t mask, receiver, timeout;
+};
+
+static int luac_create(lua_State* L) {
+  return lua_newrpc::create(L);
+}
+
+/********************************************************************************/
+
 SKYNET_API int luaopen_rpcall(lua_State* L) {
+  lua_newrpc::init_metatable(L);
   const luaL_Reg methods[] = {
     { "lookout",    luac_lookout    },
     { "create",     luac_declare    },
+    { "new",        luac_create     },
     { "remove",     luac_undeclare  },
-    { "call",       luac_rpcall     },
     { "deliver",    luac_deliver    },
     { "caller",     luac_r_caller   },
     { "responser",  luac_r_handler  },
