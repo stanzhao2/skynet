@@ -169,9 +169,8 @@ struct lua_coroutine final {
     return new_module(L, "os", methods);
   }
   std::list<co_task> task;
-  int  colref    = 0;
-  bool pending   = false;
-  bool closed    = false;
+  int  colref = 0;
+  bool closed = false;
   lua_State* coL = nullptr;
 };
 
