@@ -554,7 +554,7 @@ static int luac_rpcall(lua_State* L) {
   std::string rpcall_ret;
   auto service = lua_service();
   service->set_context(&rpcall_ret);
-  bool result = service->wait_for(max_expires);
+  bool result = service->wait_for(timeout);
   remove_of_pending(sn);
   service->set_context(nullptr);
 
