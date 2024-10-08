@@ -719,6 +719,7 @@ struct lua_newrpc final {
   static int set_mask(lua_State* L) {
     auto self = __this(L);
     auto old  = self->mask;
+    self->receiver = 0;
     self->mask = luaL_checkinteger(L, 2);
     lua_pushinteger(L, (lua_Integer)old);
     return 1;
@@ -726,6 +727,7 @@ struct lua_newrpc final {
   static int set_receiver(lua_State* L) {
     auto self = __this(L);
     auto old  = self->receiver;
+    self->mask = 0;
     self->receiver = luaL_checkinteger(L, 2);
     lua_pushinteger(L, (lua_Integer)old);
     return 1;
@@ -754,9 +756,12 @@ struct lua_newrpc final {
     lua_pop(L, 1);
   }
   static int create(lua_State* L) {
-    auto mask      = luaL_optinteger(L, 1, 0);
-    auto receiver  = luaL_optinteger(L, 2, 0);
-    auto timeout   = luaL_optinteger(L, 3, max_expires);
+    auto mask = luaL_optinteger(L, 1, 0);
+    auto receiver = luaL_optinteger(L, 2, 0);
+    if (mask && receiver) {
+      luaL_error(L, "#1 and # 2 can't both be greater than 0");
+    }
+    auto timeout = luaL_optinteger(L, 3, max_expires);
     if (timeout < 1000) {
       timeout = 1000;
     }
