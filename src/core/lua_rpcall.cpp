@@ -718,21 +718,27 @@ struct lua_newrpc final {
   }
   static int set_mask(lua_State* L) {
     auto self = __this(L);
+    auto old  = self->mask;
     self->mask = luaL_checkinteger(L, 2);
-    return 0;
+    lua_pushinteger(L, (lua_Integer)old);
+    return 1;
   }
   static int set_receiver(lua_State* L) {
     auto self = __this(L);
+    auto old  = self->receiver;
     self->receiver = luaL_checkinteger(L, 2);
-    return 0;
+    lua_pushinteger(L, (lua_Integer)old);
+    return 1;
   }
   static int set_timeout(lua_State* L) {
     auto self = __this(L);
+    auto old  = self->timeout;
     self->timeout = luaL_checkinteger(L, 2);
     if (self->timeout < 1000) {
       self->timeout = 1000;
     }
-    return 0;
+    lua_pushinteger(L, (lua_Integer)old);
+    return 1;
   }
   static void init_metatable(lua_State* L) {
     const luaL_Reg methods[] = {
