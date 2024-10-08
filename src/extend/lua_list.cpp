@@ -25,11 +25,11 @@ struct class_list final {
     return 0;
   }
   static int __gc(lua_State* L) {
+#ifdef LUA_DEBUG
+    lua_ftrace("DEBUG: %s will gc\n", name());
+#endif
     clear(L);
     auto self = __this(L);
-    if (is_debugging()) {
-      lua_ftrace("DEBUG: %s will gc\n", name());
-    }
     self->~class_list();
     return 0;
   }

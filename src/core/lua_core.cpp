@@ -88,10 +88,10 @@ struct lua_coroutine final {
     return co_next(L, 0, (lua_KContext)self);
   }
   static int __gc(lua_State* L) {
+#ifdef LUA_DEBUG
+    lua_ftrace("DEBUG: %s will gc\n", name());
+#endif
     auto self = __this(L);
-    if (is_debugging()) {
-      lua_ftrace("DEBUG: %s will gc\n", name());
-    }
     auto iter = self->task.begin();
     for (; iter != self->task.end(); ++iter) {
       auto& task = *iter;

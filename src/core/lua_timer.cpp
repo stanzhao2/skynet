@@ -43,10 +43,10 @@ public:
     return checkudata<class_timer>(L, 1, name());
   }
   inline static int __gc(lua_State* L) {
+#ifdef LUA_DEBUG
+    lua_ftrace("DEBUG: %s will gc\n", name());
+#endif
     auto self = __this(L);
-    if (is_debugging()) {
-      lua_ftrace("DEBUG: %s will gc\n", name());
-    }
     self->~class_timer();
     return 0;
   }

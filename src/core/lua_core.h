@@ -13,6 +13,10 @@
 #include <stdnet.h>
 using namespace stdnet;
 
+#if defined(STDNET_DEBUG)
+#define LUA_DEBUG
+#endif
+
 /********************************************************************************/
 
 #define lua_success(s) (s == LUA_OK || s == LUA_YIELD)
