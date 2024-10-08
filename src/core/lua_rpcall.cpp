@@ -718,17 +718,17 @@ struct lua_newrpc final {
   }
   static int set_mask(lua_State* L) {
     auto self = __this(L);
-    self->mask = luaL_checkinteger(L, 1);
+    self->mask = luaL_checkinteger(L, 2);
     return 0;
   }
   static int set_receiver(lua_State* L) {
     auto self = __this(L);
-    self->receiver = luaL_checkinteger(L, 1);
+    self->receiver = luaL_checkinteger(L, 2);
     return 0;
   }
   static int set_timeout(lua_State* L) {
     auto self = __this(L);
-    self->timeout = luaL_checkinteger(L, 1);
+    self->timeout = luaL_checkinteger(L, 2);
     if (self->timeout < 1000) {
       self->timeout = 1000;
     }
