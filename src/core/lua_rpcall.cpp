@@ -683,7 +683,7 @@ static int luac_r_deliver(lua_State* L) {
 
 struct lua_newrpc final {
   inline static const char* name() {
-    return "lua rpcall";
+    return "skynet rpcall";
   }
   inline static lua_newrpc* __this(
     lua_State* L, int index = 1) {

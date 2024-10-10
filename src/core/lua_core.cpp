@@ -51,7 +51,7 @@ struct lua_coroutine final {
     int invoked;
   };
   inline static const char* name() {
-    return "lua os.coroutine";
+    return "skynet coroutine";
   }
   static int co_next(
     lua_State* L, int status, lua_KContext ctx) {
