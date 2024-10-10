@@ -27,7 +27,7 @@ struct ssl_context final {
     : ctx(ssl::context::tlsv12) {
   }
   inline static const char* name() {
-    return "skynet ssl-context";
+    return "lua ssl.context";
   }
   inline static ssl_context* __this(lua_State* L) {
     return checkudata<ssl_context>(L, 1, name());
@@ -133,7 +133,7 @@ inline typeof<Ty> ref_new_object(lua_State* L, std::string& what) {
 
 struct lua_socket final {
   inline static const char* name() {
-    return "skynet socket";
+    return "lua io.socket";
   }
   inline static lua_socket* __this(lua_State* L) {
     return checkudata<lua_socket>(L, 1, name());
@@ -388,7 +388,7 @@ struct lua_socket final {
 
 struct lua_acceptor final {
   inline static const char* name() {
-    return "skynet server";
+    return "lua io.server";
   }
   inline static lua_acceptor* __this(lua_State* L) {
     return checkudata<lua_acceptor>(L, 1, name());

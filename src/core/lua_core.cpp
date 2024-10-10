@@ -51,7 +51,7 @@ struct lua_coroutine final {
     int invoked;
   };
   inline static const char* name() {
-    return "lua coroutine";
+    return "lua os.coroutine";
   }
   static int co_next(
     lua_State* L, int status, lua_KContext ctx) {

@@ -10,7 +10,7 @@ struct class_list final {
     : iter(data.end()) {
   }
   inline static const char* name() {
-    return "skynet list";
+    return "lua std.list";
   }
   inline static class_list* __this(lua_State* L) {
     return checkudata<class_list>(L, 1, name());

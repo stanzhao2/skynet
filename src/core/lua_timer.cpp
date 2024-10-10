@@ -37,7 +37,7 @@ struct class_timer final {
 
 public:
   inline static const char* name() {
-    return "skynet timer";
+    return "lua os.timer";
   }
   inline static class_timer* __this(lua_State* L) {
     return checkudata<class_timer>(L, 1, name());
