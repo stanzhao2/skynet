@@ -690,10 +690,10 @@ struct lua_newrpc final {
     return checkudata<lua_newrpc>(L, index, name());
   }
   static int __gc(lua_State* L) {
+    auto self = __this(L);
 #ifdef LUA_DEBUG
     lua_ftrace("DEBUG: %s will gc\n", name());
 #endif
-    auto self = __this(L);
     self->~lua_newrpc();
     return 0;
   }

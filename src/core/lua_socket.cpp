@@ -33,10 +33,10 @@ struct ssl_context final {
     return checkudata<ssl_context>(L, 1, name());
   }
   static int __gc(lua_State* L) {
+    auto self = __this(L);
 #ifdef LUA_DEBUG
     lua_ftrace("DEBUG: %s will gc\n", name());
 #endif
-    auto self = __this(L);
     self->~ssl_context();
     return 0;
   }
@@ -140,10 +140,10 @@ struct lua_socket final {
   }
   static int __gc(lua_State* L) {
     auto self = __this(L);
-    self->~lua_socket();
 #ifdef LUA_DEBUG
     lua_ftrace("DEBUG: %s(#%d) will gc\n", name(), self->socket->id());
 #endif
+    self->~lua_socket();
     return 0;
   }
   static int close(lua_State* L) {
@@ -395,10 +395,10 @@ struct lua_acceptor final {
   }
   static int __gc(lua_State* L) {
     auto self = __this(L);
-    self->~lua_acceptor();
 #ifdef LUA_DEBUG
     lua_ftrace("DEBUG: %s(#%d) will gc\n", name(), self->server->native_handle()->id());
 #endif
+    self->~lua_acceptor();
     return 0;
   }
   static int close(lua_State* L) {

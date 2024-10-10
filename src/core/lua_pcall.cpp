@@ -57,6 +57,17 @@ static int luac_pcall(lua_State* L) {
 
 /********************************************************************************/
 
+SKYNET_API int lua_xpcall(lua_State* L, int n, int r) {
+  int top = lua_gettop(L);
+  lua_pushcfunction(L, traceback);
+  int errfunc = top - n;
+  lua_insert(L, errfunc);
+  int status = lua_pcallk(L, n, r, errfunc, 0, 0);
+  top = lua_gettop(L);
+  lua_remove(L, errfunc); /* remove traceback from stack */
+  return status;
+}
+
 SKYNET_API int luaopen_pcall(lua_State* L) {
   static const luaL_Reg methods[] = {
     { "pcall",    luac_pcall    }, /* pcall (f [, arg1, ...]) */
