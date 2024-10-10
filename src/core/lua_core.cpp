@@ -109,7 +109,9 @@ struct lua_coroutine final {
     auto self = __this(L);
     if (!self->closed) {
       if (lua_isnone(L, 2)) {
-        lua_pushcfunction(L, [](lua_State*) { return 0; });
+        lua_pushcfunction(L,
+          [](lua_State*) { return 0; }
+        );
       }
       dispatch(L);
       self->closed = true;
@@ -131,7 +133,8 @@ struct lua_coroutine final {
     }
     int yields = 0;
     if (lua_success(lua_status(self->coL))) {
-      if (lua_resume(self->coL, L, 0, &yields) != LUA_YIELD) {
+      int n = lua_resume(self->coL, L, 0, &yields);
+      if (n != LUA_OK && n != LUA_YIELD) {
         lua_ferror("%s\n", luaL_checkstring(L, -1));
         lua_pop(L, 1);
       }
