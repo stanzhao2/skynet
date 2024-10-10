@@ -12,13 +12,13 @@
 /********************************************************************************/
 
 SKYNET_API int luaopen_pcall(lua_State* L);
-SKYNET_API int lua_xpcall(lua_State* L, int n, int r);
+SKYNET_API int lua_xpcall(lua_State* L, int n, int r, int f);
 
 /********************************************************************************/
 
 #ifdef  lua_pcall
 #undef  lua_pcall
-#define lua_pcall(L, n, r, e) lua_xpcall(L, n, r)
+#define lua_pcall(L, n, r, f) lua_xpcall(L, n, r, f)
 #endif
 
 /********************************************************************************/
