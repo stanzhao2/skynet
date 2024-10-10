@@ -113,15 +113,16 @@ struct lua_coroutine final {
           [](lua_State*) { return 0; }
         );
       }
+      self->closed = 1;
       dispatch(L);
-      self->closed = true;
+      self->closed = 2;
     }
     return 0;
   }
   static int dispatch(lua_State* L) {
     luaL_checktype(L, 2, LUA_TFUNCTION);
     auto self = __this(L);
-    if (self->closed) {
+    if (self->closed > 1) {
       return 0;
     }
     co_task task;
@@ -153,7 +154,7 @@ struct lua_coroutine final {
   }
   static int create(lua_State* L) {
     auto self = newuserdata<lua_coroutine>(L, name());
-    self->closed = false;
+    self->closed = 0;
     self->coL    = lua_newthread(L);
     self->colref = lua_ref(L, -1);
     lua_pop(L, 1);
@@ -173,7 +174,7 @@ struct lua_coroutine final {
   }
   std::list<co_task> task;
   int  colref = 0;
-  bool closed = false;
+  int  closed = 0;
   lua_State* coL = nullptr;
 };
 
