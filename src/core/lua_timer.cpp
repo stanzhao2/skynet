@@ -16,23 +16,24 @@ struct class_timer final {
     _timer.async_wait([=](const error_code& ec) {
       lua_State* L = lua_local();
       lua_auto_revert revert(L);
-      lua_auto_unref  unref(L, handler);
       if (ec) {
         return;
       }
-      lua_pushref(L, handler);
+      if (lua_pushref(L, handler) != LUA_TFUNCTION) {
+        return;
+      }
       if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
         lua_ferror("%s\n", luaL_checkstring(L, -1));
       }
-      size_t expires = lua_tointeger(L, -1);
-      if (expires == 0) {
+      auto expires = lua_tointeger(L, -1);
+      if (expires <= 0) {
         return;
       }
-      unref.cancel();
       on_timer(L, (expires ? expires : timeout), handler);
     });
     return 0;
   }
+  int _handler = 0;
   steady_timer _timer;
 
 public:
@@ -47,19 +48,26 @@ public:
 #ifdef LUA_DEBUG
     lua_ftrace("DEBUG: %s will gc\n", name());
 #endif
+    cancel(L);
     self->~class_timer();
     return 0;
   }
+  static int cancel(lua_State* L) {
+    auto self = __this(L);
+    if (self->_handler == 0) {
+      return 0;
+    }
+    self->_timer.cancel();
+    lua_unref(L, self->_handler);
+    return self->_handler = 0;
+  }
   static int expires(lua_State* L) {
+    cancel(L);
     auto self = __this(L);
     size_t timeout = luaL_checkinteger(L, 2);
     luaL_checktype(L, 3, LUA_TFUNCTION);
-    return self->on_timer(L, timeout, lua_ref(L, 3));
-  }
-  static int cancel(lua_State* L) {
-    auto self = __this(L);
-    self->_timer.cancel();
-    return 0;
+    self->_handler = lua_ref(L, 3);
+    return self->on_timer(L, timeout, self->_handler);
   }
   static void init_metatable(lua_State* L) {
     const luaL_Reg methods[] = {
