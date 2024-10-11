@@ -109,25 +109,18 @@ struct lua_coroutine final {
     auto self = __this(L);
     if (!self->closed) {
       if (lua_isnone(L, 2)) {
-        lua_pushcfunction(L,
-          [](lua_State*) { return 0; }
-        );
+        lua_pushcfunction(L, [](lua_State*) { return 0; });
       }
       self->closed = 1;
-      dispatch(L);
-      self->closed = 2;
+      pushback(L);
     }
     return 0;
   }
-  static int dispatch(lua_State* L) {
-    luaL_checktype(L, 2, LUA_TFUNCTION);
-    auto self = __this(L);
-    if (self->closed > 1) {
-      return 0;
-    }
+  static int pushback(lua_State* L) {
     co_task task;
     task.handler = lua_ref(L, 2);
     task.invoked = 0;
+    auto self = __this(L);
     self->task.push_back(task);
     if (self->task.size() > 1) {
       return 0;
@@ -141,6 +134,11 @@ struct lua_coroutine final {
       }
     }
     return 0;
+  }
+  static int dispatch(lua_State* L) {
+    auto self = __this(L);
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+    return self->closed ? 0 : pushback(L);
   }
   static void init_metatable(lua_State* L) {
     const luaL_Reg methods[] = {
@@ -173,8 +171,8 @@ struct lua_coroutine final {
     return new_module(L, "os", methods);
   }
   std::list<co_task> task;
-  int  colref = 0;
-  int  closed = 0;
+  int colref = 0;
+  int closed = 0;
   lua_State* coL = nullptr;
 };
 
