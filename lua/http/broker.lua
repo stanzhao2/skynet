@@ -308,7 +308,7 @@ end
 local function http_on_accept(peer, ec)
   if ec then
     peer:close();
-	return;
+    return;
   end
   local session = http_new_session(peer);
   peer:receive(bind(http_on_receive, session));
@@ -336,7 +336,7 @@ function main(port, host, ca, key, pwd)
   local ok = server:listen(host or "0.0.0.0", port, http_on_accept);
   if not ok then
     error(format("socket listen error at port: %d", port));
-	return;
+    return;
   end
   rpc.create("http:index", skynet_version);
   print(format("%s works on port %d", os.name(), port));

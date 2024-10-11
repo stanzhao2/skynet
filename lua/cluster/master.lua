@@ -18,14 +18,14 @@ local active_sessions = {};
 local function sendto_member(session)
   for peer, v in pairs(active_sessions) do
     if peer ~= session.socket then
-	  local packet = {
-	    what = proto_type.forword,
-		id   = v.socket:id(),
-		ip   = v.ip,
-		port = v.port,
-	  };
-	  session.socket:send(wrap(packet));
-	end
+      local packet = {
+        what = proto_type.forword,
+        id   = v.socket:id(),
+        ip   = v.ip,
+        port = v.port,
+      };
+      session.socket:send(wrap(packet));
+    end
   end
   local peer = session.socket;
   peer:send(wrap({what = proto_type.ready}));
@@ -47,7 +47,7 @@ end
 local function on_receive(peer, data, ec)
   if ec then
     on_error(peer, ec);
-	return;
+    return;
   end
 end
 
@@ -64,8 +64,8 @@ local function new_session(peer)
   end
   local session = {
     socket = peer,
-	ip     = host,
-	port   = port,
+    ip     = host,
+    port   = port,
   };
   active_sessions[peer] = session;
   sendto_member(session);
@@ -78,11 +78,11 @@ end
 local function on_accept(peer, ec)
   if ec then
     on_error(peer, ec);
-	return;
+    return;
   end
   if not new_session(peer) then
     peer:close();
-	return;
+    return;
   end
   peer:receive(bind(on_receive, peer));
 end
@@ -95,7 +95,7 @@ function main(port, host)
   local ok = server:listen(host or "0.0.0.0", port, on_accept);  
   if not ok then
     error(format("server listen error at port: %d", port));
-	return;
+    return;
   end 
   
   print(format("%s works on port %d", os.name(), port));  
