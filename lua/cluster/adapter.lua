@@ -45,7 +45,7 @@ end
 local function lua_bind(info, caller)
   local name = info.name;
   if not is_local(caller) then
-	r_bind(name, caller, info.rcb);
+    r_bind(name, caller, info.rcb);
   end
   if not r_handlers[caller] then
     r_handlers[caller] = {};
@@ -58,7 +58,7 @@ end
 
 local function lua_unbind(name, caller)
   if not is_local(caller) then
-	r_unbind(name, caller);
+    r_unbind(name, caller);
   end
   r_handlers[caller][name] = nil;
   trace(format("unbind %s by caller(%d)", name, caller));
@@ -77,11 +77,11 @@ local function ws_on_error(peer, msg)
   for caller, v in pairs(r_handlers) do
     if not is_local(caller) then
       if caller & const_max == id then
-	    for name, info in pairs(v) do
-	      lua_unbind(name, caller);
-	    end
-	    r_handlers[caller] = nil;
-	  end
+        for name, info in pairs(v) do
+          lua_unbind(name, caller);
+        end
+        r_handlers[caller] = nil;
+      end
     end
   end
 end
@@ -91,7 +91,7 @@ end
 local function ws_on_receive(peer, data, ec)
   if ec then
     ws_on_error(peer, "receive error");
-	return;
+    return;
   end
   local id   = peer:id();
   local info = unwrap(data);
@@ -99,35 +99,35 @@ local function ws_on_receive(peer, data, ec)
   
   if what == proto_type.deliver then
     local name   = info.name;
-	local argv   = info.argv;
-	local mask   = info.mask;
-	local who    = info.who;
-	local caller = info.caller << 16 | id;
-	local rcf    = info.rcf;
-	local sn     = info.sn;
-	r_deliver(name, argv, mask, who, caller, rcf, sn);
-	return;
+    local argv   = info.argv;
+    local mask   = info.mask;
+    local who    = info.who;
+    local caller = info.caller << 16 | id;
+    local rcf    = info.rcf;
+    local sn     = info.sn;
+    r_deliver(name, argv, mask, who, caller, rcf, sn);
+    return;
   end
   if what == proto_type.response then
     local data   = info.data;
-	local caller = info.caller;
-	local rcf    = info.rcf;
-	local sn     = info.sn;
-	r_response(data, caller, rcf, sn);
-	return;
+    local caller = info.caller;
+    local rcf    = info.rcf;
+    local sn     = info.sn;
+    r_response(data, caller, rcf, sn);
+    return;
   end  
   if what == proto_type.bind then
     local name   = info.name;
-	local rcb    = info.rcb;
-	local caller = info.caller << 16 | id;
-	lua_bind(info, caller);
-	return;
+    local rcb    = info.rcb;
+    local caller = info.caller << 16 | id;
+    lua_bind(info, caller);
+    return;
   end
   if what == proto_type.unbind then
     local name   = info.name;
-	local caller = info.caller << 16 | id;
-	lua_unbind(name, caller);
-	return;
+    local caller = info.caller << 16 | id;
+    lua_unbind(name, caller);
+    return;
   end  
 end
 
@@ -136,23 +136,23 @@ end
 local function on_lookout(info)
   local what = info.what;  
   if what == proto_type.bind then
-	lua_bind(info, info.caller);
+    lua_bind(info, info.caller);
     sendto_others(wrap(info));
-	return;
+    return;
   end
   if what == proto_type.unbind then
-	lua_unbind(info.name, info.caller);
+    lua_unbind(info.name, info.caller);
     sendto_others(wrap(info));
-	return;
+    return;
   end
   local id;
   if what == proto_type.deliver then
     id = info.who & const_max;
-	info.who = info.who >> 16;
+    info.who = info.who >> 16;
   end
   if what == proto_type.response then
     id = info.caller & const_max;
-	info.caller = info.caller >> 16;
+    info.caller = info.caller >> 16;
   end
   local session = active_sessions[id];
   if session then
@@ -170,8 +170,8 @@ local function new_session(peer)
   local endpoint = peer:endpoint();
   local session = {
     socket = peer,
-	ip     = endpoint.address,
-	port   = endpoint.port,
+    ip     = endpoint.address,
+    port   = endpoint.port,
   };
   local id = peer:id();
   active_sessions[id] = session;
@@ -179,10 +179,10 @@ local function new_session(peer)
 
   for caller, bounds in pairs(r_handlers) do
     if is_local(caller) then
-	  for name, info in pairs(bounds) do
-	    peer:send(wrap(info));
+      for name, info in pairs(bounds) do
+        peer:send(wrap(info));
       end
-	end
+    end
   end
   return true;
 end
@@ -192,8 +192,8 @@ end
 local function peer_exist(host, port)
   for id, session in pairs(active_sessions) do
     if session.ip == host and session.port == port then
-	  return true;
-	end
+      return true;
+    end
   end
   return false;
 end
@@ -203,7 +203,7 @@ end
 local function ws_on_accept(peer, ec)
   if ec then
     ws_on_error(ec, peer, "accept error");
-	return;
+    return;
   end
   if not new_session(peer) then
     peer:close();
@@ -220,7 +220,7 @@ local function new_connect(host, port, protocol)
   peer:setheader(proto_type.cluster.join, "skynet-lua");
   if peer:connect(host, port) then
     new_session(peer);
-	return true;
+    return true;
   end
   return false;
 end
@@ -230,23 +230,23 @@ end
 local function connect_members(socket, protocol)
   while true do
     local data = socket:read();
-	if not data then
-	  return false;
-	end
-	local packet = unwrap(data);
-	if packet.what == proto_type.ready then
-	  break;
-	end    
-	if packet.what ~= proto_type.forword then
-	  return false;
-	end
-	local host = packet.ip;
-	local port = packet.port;
-	if not new_connect(host, port, protocol) then
+    if not data then
+      return false;
+    end
+    local packet = unwrap(data);
+    if packet.what == proto_type.ready then
+      break;
+    end    
+    if packet.what ~= proto_type.forword then
+      return false;
+    end
+    local host = packet.ip;
+    local port = packet.port;
+    if not new_connect(host, port, protocol) then
       error(format("socket connect to %s:%d error", host, port));
-	  return false;
-	end
-    os.wait(0);
+      return false;
+    end
+    os.poll();
   end
   return true;
 end
@@ -257,7 +257,7 @@ local function listen_on_local(port, protocol)
   local server = io.server(protocol);
   local ok = server:listen("0.0.0.0", 0, ws_on_accept);
   if not ok then
-	return;
+    return;
   end
   return server, server:endpoint().port;
 end
@@ -288,7 +288,7 @@ function main(host, port)
   
   if not socket:connect(host, port) then
     error(format("socket connect to %s:%d error", host, port));
-	return;
+    return;
   end
   rpc.lookout(on_lookout);
   if not connect_members(socket, protocol) then

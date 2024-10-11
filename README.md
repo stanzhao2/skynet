@@ -60,6 +60,7 @@
 -   os.processors()
 -   os.id()
 -   os.post(func [, ...])
+-   os.poll()
 -   os.wait([expires])
 -   os.exit()
 -   os.stop()

@@ -298,6 +298,13 @@ static int os_post(lua_State* L) {
   return 0;
 }
 
+static int os_poll(lua_State* L) {
+  auto ios = lua_service();
+  size_t count = ios->poll();
+  lua_pushinteger(L, (lua_Integer)count);
+  return 1;
+}
+
 static int os_wait(lua_State* L) {
   pload_context* context = local_context(L);
   if (context) {
@@ -317,7 +324,7 @@ static int os_wait(lua_State* L) {
   else {
     count = ios->poll();
   }
-  lua_pushinteger(L, count);
+  lua_pushinteger(L, (lua_Integer)count);
   return 1;
 }
 
@@ -335,6 +342,7 @@ SKYNET_API int luaopen_core(lua_State* L) {
     { "dirsep",       os_dirsep     },
     { "debugging",    os_debugging  },
     { "wait",         os_wait       },
+    { "poll",         os_poll       },
     { "getcwd",       os_getcwd     },
     { "id",           os_id         },
     { "name",         os_name       },
