@@ -26,6 +26,7 @@ struct class_timer final {
       }
       size_t expires = lua_tointeger(L, -1);
       if (expires == 0) {
+        *pending = false;
         return;
       }
       unref.cancel();
