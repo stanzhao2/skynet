@@ -9,32 +9,32 @@ struct class_timer final {
   inline class_timer()
     : _timer(*lua_service()) {
   }
-  int on_timer(lua_State* L, size_t timeout, int handler) {
+  int on_timer(lua_State* L, size_t timeout, int handler, std::shared_ptr<bool> pending) {
     _timer.expires_after(
       std::chrono::milliseconds(timeout)
     );
     _timer.async_wait([=](const error_code& ec) {
       lua_State* L = lua_local();
       lua_auto_revert revert(L);
-      if (ec) {
+      lua_auto_unref  unref(L, handler);
+      if (ec || !*pending) {
         return;
       }
-      if (lua_pushref(L, handler) != LUA_TFUNCTION) {
-        return;
-      }
+      lua_pushref(L, handler);
       if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
         lua_ferror("%s\n", luaL_checkstring(L, -1));
       }
-      auto expires = lua_tointeger(L, -1);
-      if (expires <= 0) {
+      size_t expires = lua_tointeger(L, -1);
+      if (expires == 0) {
         return;
       }
-      on_timer(L, (expires ? expires : timeout), handler);
+      unref.cancel();
+      on_timer(L, (expires ? expires : timeout), handler, pending);
     });
     return 0;
   }
-  int _handler = 0;
   steady_timer _timer;
+  std::shared_ptr<bool> _pending;
 
 public:
   inline static const char* name() {
@@ -54,20 +54,22 @@ public:
   }
   static int cancel(lua_State* L) {
     auto self = __this(L);
-    if (self->_handler == 0) {
-      return 0;
-    }
     self->_timer.cancel();
-    lua_unref(L, self->_handler);
-    return self->_handler = 0;
+    if (self->_pending) {
+      *self->_pending = false;
+      self->_pending.reset();
+    }
+    return 0;
   }
   static int expires(lua_State* L) {
-    cancel(L);
     auto self = __this(L);
     size_t timeout = luaL_checkinteger(L, 2);
     luaL_checktype(L, 3, LUA_TFUNCTION);
-    self->_handler = lua_ref(L, 3);
-    return self->on_timer(L, timeout, self->_handler);
+
+    cancel(L);
+    auto handler = lua_ref(L, 3);
+    self->_pending = std::make_shared<bool>(true);
+    return self->on_timer(L, timeout, handler, self->_pending);
   }
   static void init_metatable(lua_State* L) {
     const luaL_Reg methods[] = {
