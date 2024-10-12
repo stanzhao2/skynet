@@ -64,6 +64,9 @@ static lua_State* newstate() {
     lua_atpanic (L, &panic);
     lua_setwarnf(L, warnfoff, L); /* default is warnings off */
     openlibs(L, skynet_modules);
+    if (lua_gettop(L) > 0) {
+      lua_ftrace("WARNNING: stack exception");
+    }
   }
   return L;
 }
