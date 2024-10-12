@@ -2,28 +2,12 @@
 
 #include "../skynet.h"
 #include "lua_print.h"
+#include "lua_serialize.h"
 
 /********************************************************************************/
 
-static const char* tostring(lua_State* L) {
-  int argc = lua_gettop(L);
-  std::string str;
-  lua_getglobal(L, "tostring");
-  for (int i = 1; i <= argc; i++) {
-    lua_pushvalue(L, -1);
-    lua_pushvalue(L, i);
-    if (lua_pcall(L, 1, 1, 0) == LUA_OK) {
-      size_t n;
-      const char* p = luaL_checklstring(L, -1, &n);
-      str.append(p, n);
-      if (i < argc) {
-        str.append("\t", 1);
-      }
-    }
-    lua_pop(L, 1);
-  }
-  lua_pop(L, 1);
-  lua_pushlstring(L, str.c_str(), str.size());
+static const char* tostring(lua_State* L, int index) {
+  lua_serialize(L, index);
   return luaL_checkstring(L, -1);
 }
 
@@ -128,30 +112,62 @@ static void foutput(const char* msg, color_type color) {
 }
 
 static int luac_throw(lua_State* L) {
-  luaL_error(L, "%s", tostring(L));
+  luaL_checktype(L, 1, LUA_TSTRING);
+  luaL_error(L, "%s", lua_tostring(L, 1));
   return 0;
 }
 
-static int luac_print(lua_State* L) {
-  const char* msg = tostring(L);
+static int lua__print(lua_State* L) {
+  const char* msg = tostring(L, 1);
   const char* pos = fileline(L);
   lua_printf(color_type::print, "%s %s\n", pos, msg);
   return 0;
 }
 
-static int luac_trace(lua_State* L) {
-  if (is_debugging()) {
-    const char* msg = tostring(L);
-    const char* pos = fileline(L);
-    lua_printf(color_type::trace, "%s %s\n", pos, msg);
+static int luac_print(lua_State* L) {
+  int top = lua_gettop(L);
+  for (int i = 1; i <= top; i++) {
+    lua_pushcfunction(L, lua__print);
+    lua_pushvalue(L, i);
+    lua_pcall(L, 1, 0, 0);
   }
   return 0;
 }
 
-static int luac_error(lua_State* L) {
-  const char* msg = tostring(L);
+static int lua__trace(lua_State* L) {
+  const char* msg = tostring(L, 1);
+  const char* pos = fileline(L);
+  lua_printf(color_type::trace, "%s %s\n", pos, msg);
+  return 0;
+}
+
+static int luac_trace(lua_State* L) {
+  if (!is_debugging()) {
+    return 0;
+  }
+  int top = lua_gettop(L);
+  for (int i = 1; i <= top; i++) {
+    lua_pushcfunction(L, lua__trace);
+    lua_pushvalue(L, i);
+    lua_pcall(L, 1, 0, 0);
+  }
+  return 0;
+}
+
+static int lua__error(lua_State* L) {
+  const char* msg = tostring(L, 1);
   const char* pos = fileline(L);
   lua_printf(color_type::error, "%s %s\n", pos, msg);
+  return 0;
+}
+
+static int luac_error(lua_State* L) {
+  int top = lua_gettop(L);
+  for (int i = 1; i <= top; i++) {
+    lua_pushcfunction(L, lua__error);
+    lua_pushvalue(L, i);
+    lua_pcall(L, 1, 0, 0);
+  }
   return 0;
 }
 
@@ -159,11 +175,11 @@ static int luac_error(lua_State* L) {
 
 int luaopen_print(lua_State* L) {
   const luaL_Reg methods[] = {
-    { "print",    luac_print    }, /* print (arg1 [, ...]) */
-    { "trace",    luac_trace    }, /* trace (arg1 [, ...]) */
-    { "error",    luac_error    }, /* error (arg1 [, ...]) */
-    { "throw",    luac_throw    }, /* throw (arg1 [, ...]) */
-    { NULL,       NULL          }
+    { "print",      luac_print      }, /* print(...) */
+    { "trace",      luac_trace      }, /* trace(...) */
+    { "error",      luac_error      }, /* error(...) */
+    { "throw",      luac_throw      }, /* throw(...) */
+    { NULL,         NULL            }
   };
   return new_module(L, LUA_GNAME, methods);
 }

@@ -467,7 +467,7 @@ static void mp_encode_lua_null(lua_State *L, mp_buf *buf) {
 * an object at key '1', we serialize to message pack list. Otherwise
 * we use a map. */
 static void mp_encode_lua_table(lua_State *L, mp_buf *buf, int level) {
-#ifdef _MSC_VER
+#ifdef LUA_DEBUG
   static thread_local std::set<const void*> readed;
   if (level == 0) {
     readed.clear();
@@ -490,7 +490,7 @@ static void mp_encode_lua_table(lua_State *L, mp_buf *buf, int level) {
   else {
     mp_encode_lua_table_as_map(L,buf,level);
   }
-#ifdef _MSC_VER
+#ifdef LUA_DEBUG
   readed.erase(lua_topointer(L, -1));
 #endif
 }
