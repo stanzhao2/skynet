@@ -11,6 +11,7 @@ static const char* tostring(lua_State* L) {
   std::string str;
   for (int i = 1; i <= argc; i++) {
     str.append(luaL_tolstring(L, i, &n), n);
+    lua_pop(L, 1);
     if (i < argc) {
       str.append("\t", 1);
     }
