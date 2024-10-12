@@ -42,8 +42,9 @@ static void dump_table(lua_State* L, int i, int lv, std::string& s) {
 #endif
 
   char buf[128];
-  snprintf(buf, sizeof(buf), "{ -- 0x%p", lua_topointer(L, i));
+  snprintf(buf, sizeof(buf), "{ -- %s", luaL_tolstring(L, i, nullptr));
   s += buf;
+  lua_pop(L, 1);
 
   bool newline = true;
   lua_pushnil(L);
