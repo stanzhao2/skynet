@@ -27,6 +27,16 @@ static void dump_key(lua_State* L, int i, int lv, std::string& s) {
   lua_pop(L, 1);
 }
 
+static void dump_value(lua_State* L, int i, int lv, std::string& s) {
+  size_t n = 0;
+  int t = lua_type(L, i);
+  int x = lua_type(L, 1);
+  append_if_string(t, s, "\"");
+  s.append(luaL_tolstring(L, i, &n), n);
+  append_if_string(t, s, "\"");
+  lua_pop(L, 1);
+}
+
 static void dump_table(lua_State* L, int i, int lv, std::string& s) {
 #ifdef LUA_DEBUG
   static thread_local std::set<const void*> readed;
@@ -42,7 +52,8 @@ static void dump_table(lua_State* L, int i, int lv, std::string& s) {
 #endif
 
   char buf[128];
-  snprintf(buf, sizeof(buf), "{ -- %s", luaL_tolstring(L, i, nullptr));
+  const char* fmt = lv ? "{ -- %s" : "%s {";
+  snprintf(buf, sizeof(buf), fmt, luaL_tolstring(L, i, nullptr));
   s += buf;
   lua_pop(L, 1);
 
@@ -67,19 +78,48 @@ static void dump_table(lua_State* L, int i, int lv, std::string& s) {
 #endif
 }
 
-static void dump_value(lua_State* L, int i, int lv, std::string& s) {
-  size_t n = 0;
-  int t = lua_type(L, i);
-  int x = lua_type(L, 1);
-  if (x == LUA_TTABLE) append_if_string(t, s, "\"");
-  s.append(luaL_tolstring(L, i, &n), n);
-  if (x == LUA_TTABLE) append_if_string(t, s, "\"");
+static void dump_nil(lua_State* L, int i, std::string& s) {
+  s += "nil";
+}
+
+static void dump_other(lua_State* L, int i, std::string& s) {
+  s += luaL_tolstring(L, i, NULL);
   lua_pop(L, 1);
 }
 
+static void dump_numbert(lua_State* L, int i, std::string& s) {
+  s += lua_isinteger(L, i) ? "integer: " : "number: ";
+  s += luaL_tolstring(L, i, NULL);
+  lua_pop(L, 1);
+}
+
+static void dump_string(lua_State* L, int i, std::string& s) {
+  s += "string: ";
+  s += luaL_checkstring(L, i);
+}
+
+static void dump_boolean(lua_State* L, int i, std::string& s) {
+  s += "boolean: ";
+  s += lua_toboolean(L, i) ? "true" : "false";
+}
+
 static void dump_object(lua_State* L, int i, int lv, std::string& s) {
-  int t = lua_type(L, i);
-  t == LUA_TTABLE ? dump_table(L, i, lv, s) : dump_value(L, i, lv, s);
+  int type = lua_type(L, i);
+  if (type == LUA_TTABLE) {
+    dump_table(L, i, lv, s);
+    return;
+  }
+  if (lua_type(L, 1) == LUA_TTABLE) {
+    dump_value(L, i, lv, s);
+    return;
+  }
+  switch (type) {
+  case LUA_TNIL:     dump_nil(L, i, s);     return;
+  case LUA_TBOOLEAN: dump_boolean(L, i, s); return;
+  case LUA_TNUMBER:  dump_numbert(L, i, s); return;
+  case LUA_TSTRING:  dump_string(L, i, s);  return;
+  }
+  dump_other(L, i, s);
 }
 
 static int luac_toview(lua_State* L) {
