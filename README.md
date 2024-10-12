@@ -41,6 +41,7 @@
 -   throw(...)
 -   wrap(...)
 -   unwrap(str)
+-   view(arg)
 -   compress(str [,<"deflate">/<"gzip">])
 -   uncompress(str [,<"deflate">/<"gzip">])
 
