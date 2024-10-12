@@ -16,6 +16,7 @@ local r_unbind   = rpc.r_unbind;
 local r_response = rpc.r_response;
 
 local format = string.format;
+local rpcf_name = nil;
 local r_handlers = {};
 local active_sessions = {};
 local const_max <const> = 0xffff;
@@ -81,6 +82,11 @@ local function ws_on_error(peer, msg)
           lua_unbind(name, caller);
         end
         r_handlers[caller] = nil;
+        if rpcf_name then
+          local rpcall = rpc.new();
+          local ev = "leave";
+          rpcall:dispatch(rpcf_name, ev, caller);
+        end
       end
     end
   end
@@ -273,7 +279,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function main(host, port)
+function main(host, port, rpcname)
   local protocol = "ws";
   local server, lport = listen_on_local(0, protocol);
   if not lport then
@@ -281,6 +287,9 @@ function main(host, port)
     return;
   end
   
+  assert(rpcname == nil or type(rpcname) == "string");
+  rpcf_name = rpcname;
+
   host = host or "127.0.0.1";
   port = port or 80;
   local socket = io.socket(protocol);
