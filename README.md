@@ -108,9 +108,9 @@
 -   job:state()
 
  **io functions** 
+-   io.context() #6
 -   io.socket(<"tcp">/<"ssl">/<"ws">/<"wss">, [context]]) #4
 -   io.server(<"tcp">/<"ssl">/<"ws">/<"wss">>, [context]) #5
--   io.context() #6
 -   io.http.request_parser(options)
 -   io.http.response_parser(options)
 -   io.http.parse_url(url)
