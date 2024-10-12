@@ -31,7 +31,7 @@ SOURCE  := src/core/lua_bind.o \
 		   src/core/lua_require.o \
 		   src/core/lua_rpcall.o \
 		   src/core/lua_socket.o \
-		   src/core/lua_serialize.o \
+		   src/core/lua_format.o \
 		   src/core/lua_timer.o \
 		   src/core/lua_sheet.o \
 		   src/core/lua_wrap.o \

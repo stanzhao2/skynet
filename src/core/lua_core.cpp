@@ -14,6 +14,7 @@
 #include "lua_wrap.h"
 #include "lua_timer.h"
 #include "lua_socket.h"
+#include "lua_format.h"
 
 /********************************************************************************/
 
@@ -30,6 +31,7 @@ static const lua_CFunction core_modules[] = {
   luaopen_pload,        /* pload          */
   luaopen_timer,        /* os.timer       */
   luaopen_socket,       /* io.socket      */
+  luaopen_format,       /* vtos           */
   NULL
 };
 

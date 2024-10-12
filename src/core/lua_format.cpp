@@ -1,29 +1,28 @@
 
 
 #include <set>
-#include "lua_serialize.h"
+#include "lua_format.h"
 
 /********************************************************************************/
 
-#define push_marks(t, s, c) if (t == LUA_TSTRING) s += c
+#define append_if_string(t, s, c) if (t == LUA_TSTRING) s += c
 
 static void dump_object(lua_State* L, int i, int lv, std::string& s);
 
-static void push_black(std::string& s, int lv) {
+static void append_black(std::string& s, int lv) {
   for (int i = 0; i < lv; i++) {
     s.append("    ", 4);
   }
 }
 
 static void dump_key(lua_State* L, int i, int lv, std::string& s) {
-  int type = lua_type(L, i);
-  push_black(s, lv);
-  s += "[";
-  push_marks(type, s, "\"");
   size_t n = 0;
-  const char* p = luaL_tolstring(L, i, &n);
-  s.append(p, n);
-  push_marks(type, s, "\"");
+  append_black(s, lv);
+  s += "[";
+  int t = lua_type(L, i);
+  append_if_string(t, s, "\"");
+  s.append(luaL_tolstring(L, i, &n), n);
+  append_if_string(t, s, "\"");
   s += "] = ";
   lua_pop(L, 1);
 }
@@ -42,7 +41,10 @@ static void dump_table(lua_State* L, int i, int lv, std::string& s) {
   readed.insert(p);
 #endif
 
-  s += "{";
+  char buf[128];
+  snprintf(buf, sizeof(buf), "{ -- 0x%p", lua_topointer(L, i));
+  s += buf;
+
   bool newline = true;
   lua_pushnil(L);
   while (lua_next(L, i)) {
@@ -54,10 +56,9 @@ static void dump_table(lua_State* L, int i, int lv, std::string& s) {
     dump_key(L, top - 1, lv + 1, s);
     dump_object(L, top, lv + 1, s);
     s += ",\n";
-    top = lua_gettop(L);
     lua_pop(L, 1);
   }
-  push_black(s, lv);
+  append_black(s, lv);
   s += "}";
 
 #ifdef LUA_DEBUG
@@ -66,25 +67,35 @@ static void dump_table(lua_State* L, int i, int lv, std::string& s) {
 }
 
 static void dump_value(lua_State* L, int i, int lv, std::string& s) {
-  int type = lua_type(L, i);
-  push_marks(type, s, "\"");
   size_t n = 0;
-  const char* p = luaL_tolstring(L, i, &n);
-  s.append(p, n);
-  push_marks(type, s, "\"");
+  int t = lua_type(L, i);
+  int x = lua_type(L, 1);
+  if (x == LUA_TTABLE) append_if_string(t, s, "\"");
+  s.append(luaL_tolstring(L, i, &n), n);
+  if (x == LUA_TTABLE) append_if_string(t, s, "\"");
   lua_pop(L, 1);
 }
 
 static void dump_object(lua_State* L, int i, int lv, std::string& s) {
-  lua_type(L, i) == LUA_TTABLE ? dump_table(L, i, lv, s) : dump_value(L, i, lv, s);
+  int t = lua_type(L, i);
+  t == LUA_TTABLE ? dump_table(L, i, lv, s) : dump_value(L, i, lv, s);
+}
+
+static int luac_toview(lua_State* L) {
+  std::string s;
+  dump_object(L, 1, 0, s);
+  lua_pushlstring(L, s.c_str(), s.size());
+  return 1;
 }
 
 /********************************************************************************/
 
-SKYNET_API void lua_serialize(lua_State* L, int index) {
-  std::string s;
-  dump_object(L, index, 0, s);
-  lua_pushlstring(L, s.c_str(), s.size());
+SKYNET_API int luaopen_format(lua_State* L) {
+  const luaL_Reg methods[] = {
+    { "view",  luac_toview  },
+    { NULL,     NULL        }
+  };
+  return new_module(L, LUA_GNAME, methods);
 }
 
 /********************************************************************************/
