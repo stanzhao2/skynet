@@ -41,16 +41,16 @@
 -   throw(...)
 -   wrap(...)
 -   unwrap(str)
--   tostring(arg [, <false>/<true>])
--   compress(str [,<"deflate">/<"gzip">])
--   uncompress(str [,<"deflate">/<"gzip">])
+-   tostring(arg [, false | true])
+-   compress(str [, "deflate" | "gzip"])
+-   uncompress(str [, "deflate" | "gzip"])
 
  **os functions** 
 -   os.version()
 -   os.pload(name [, ...]) #1
 -   os.compile(fname [, oname])
--   os.clock([<"s">/<"ms">])
--   os.system_clock([<"s">/<"ms">])
+-   os.clock(["s" | "ms"])
+-   os.system_clock(["s" | "ms"])
 -   os.getcwd()
 -   os.name()
 -   os.coroutine() #7
@@ -69,7 +69,7 @@
 -   os.debugging()
 
  **rpc functions** 
--   rpc.create(name, func [, <false>/<true>])
+-   rpc.create(name, func [, false | true])
 -   rpc.new([mask] [, receiver] [, timeout]) #9
 -   rpc.remove(name)
 -   rpc.caller()
@@ -110,8 +110,8 @@
 
  **io functions** 
 -   io.context() #6
--   io.socket(<"tcp">/<"ssl">/<"ws">/<"wss">, [context]]) #4
--   io.server(<"tcp">/<"ssl">/<"ws">/<"wss">>, [context]) #5
+-   io.socket("tcp" | "ssl" | "ws" | "wss" [, context]]) #4
+-   io.server("tcp" | "ssl" | "ws" | "wss" [, context]]) #5
 -   io.http.request_parser(options)
 -   io.http.response_parser(options)
 -   io.http.parse_url(url)
@@ -124,11 +124,11 @@
 -   socket:id()
 -   socket:read()
 -   socket:write(data)
--   socket:send(data [,func])
+-   socket:send(data [, func])
 -   socket:receive(func)
--   socket:endpoint([<"remote">/<"local">])
+-   socket:endpoint(["remote" | "local"])
 -   socket:geturi()
--   socket:getheader(name [,<"request">/<"response">])
+-   socket:getheader(name [, "request" | "response"])
 -   socket:seturi(uri)
 -   socket:setheader(name, value)
 
@@ -184,18 +184,18 @@
 -   crypto.rsa.encrypt(str, key)
 -   crypto.rsa.decrypt(str, key)
 -   crypto.hash32(str)
--   crypto.sha1(str [,<false>/<true>])
--   crypto.sha224(str [,<false>/<true>])
--   crypto.sha256(str [,<false>/<true>])
--   crypto.sha384(str [,<false>/<true>])
--   crypto.sha512(str [,<false>/<true>])
--   crypto.md5(str [,<false>/<true>])
--   crypto.hmac.sha1(str, key [,<false>/<true>])
--   crypto.hmac.sha224(str, key [,<false>/<true>])
--   crypto.hmac.sha256(str, key [,<false>/<true>])
--   crypto.hmac.sha384(str, key [,<false>/<true>])
--   crypto.hmac.sha512(str, key [,<false>/<true>])
--   crypto.hmac.md5(str, key [,<false>/<true>])
+-   crypto.sha1(str [, false | true])
+-   crypto.sha224(str [, false | true])
+-   crypto.sha256(str [, false | true])
+-   crypto.sha384(str [, false | true])
+-   crypto.sha512(str [, false | true])
+-   crypto.md5(str [, false | true])
+-   crypto.hmac.sha1(str, key [, false | true])
+-   crypto.hmac.sha224(str, key [, false | true])
+-   crypto.hmac.sha256(str, key [, false | true])
+-   crypto.hmac.sha384(str, key [, false | true])
+-   crypto.hmac.sha512(str, key [, false | true])
+-   crypto.hmac.md5(str, key [, false | true])
 
  **usage remarks**
 -  _#1: return job object
