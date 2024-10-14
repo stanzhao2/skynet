@@ -72,7 +72,7 @@
 -   rpc.create(name, func [, false | true])
 -   rpc.new([mask] [, receiver] [, timeout]) #9
 -   rpc.remove(name)
--   rpc.dump()
+-   rpc.provider([name])
 -   rpc.caller()
 -   rpc.responser()
 

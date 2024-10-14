@@ -784,31 +784,42 @@ struct lua_newrpc final {
   size_t mask, receiver, timeout;
 };
 
-static int luac_dump(lua_State* L) {
+static void push_provider(lua_State* L, const rpcall_set_type& list) {
+  int i = 1;
+  lua_createtable(L, (int)list.size(), 0);
+  for (auto& node : list) {
+    lua_createtable(L, 2, 0);
+    lua_pushstring(L, is_local(node.who) ? "local" : "remote");
+    lua_setfield(L, -2, "type");
+
+    lua_pushboolean(L, (node.opt || !is_local(node.who)) ? 1 : 0);
+    lua_setfield(L, -2, "public");
+
+    lua_pushstring(L, node.osname.c_str());
+    lua_setfield(L, -2, "creater");
+    lua_rawseti(L, -2, i++);
+  }
+}
+
+static int luac_provider(lua_State* L) {
   unique_mutex_lock(_mutex);
-  lua_createtable(L, 0, (int)rpcall_handlers.size());
-  auto iter = rpcall_handlers.begin();
-  for (; iter != rpcall_handlers.end(); ++iter) {
-    int i = 1;
-    lua_createtable(L, (int)iter->second.size(), 0);
-    for (auto& node : iter->second) {
-      lua_createtable(L, 2, 0);
-      lua_pushstring(L, is_local(node.who) ? "local" : "remote");
-      lua_setfield(L, -2, "type");
-
-      lua_pushboolean(L, (node.opt || !is_local(node.who)) ? 1 : 0);
-      lua_setfield(L, -2, "public");
-
-      lua_pushstring(L, node.osname.c_str());
-      lua_setfield(L, -2, "creater");
-      lua_rawseti(L, -2, i++);
+  if (lua_isnone(L, 1)) {
+    lua_createtable(L, 0, (int)rpcall_handlers.size());
+    auto iter = rpcall_handlers.begin();
+    for (; iter != rpcall_handlers.end(); ++iter) {
+      push_provider(L, iter->second);
+      lua_setfield(L, -2, iter->first.c_str());
     }
-    lua_setfield(L, -2, iter->first.c_str());
+  }
+  else {
+    const char* name = luaL_checkstring(L, 1);
+    auto iter = rpcall_handlers.find(name);
+    iter == rpcall_handlers.end() ? lua_pushnil(L) : push_provider(L, iter->second);
   }
   return 1;
 }
 
-static int luac_create(lua_State* L) {
+static int luac_new(lua_State* L) {
   return lua_newrpc::create(L);
 }
 
@@ -819,8 +830,8 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
   const luaL_Reg methods[] = {
     { "lookout",    luac_lookout    },
     { "create",     luac_declare    },
-    { "new",        luac_create     },
-    { "dump",       luac_dump       },
+    { "new",        luac_new        },
+    { "provider",   luac_provider   },
     { "remove",     luac_undeclare  },
     { "caller",     luac_r_caller   },
     { "responser",  luac_r_handler  },
