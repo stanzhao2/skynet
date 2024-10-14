@@ -1,7 +1,7 @@
 
 
-#ifndef __LUA_FORMAT_H
-#define __LUA_FORMAT_H
+#ifndef __LUA_TOSTRING_H
+#define __LUA_TOSTRING_H
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1200)
 # pragma once
@@ -13,8 +13,8 @@
 
 /********************************************************************************/
 
-SKYNET_API int luaopen_format(lua_State* L);
+SKYNET_API int luaopen_tostring(lua_State* L);
 
 /********************************************************************************/
 
-#endif //__LUA_FORMAT_H
+#endif //__LUA_TOSTRING_H

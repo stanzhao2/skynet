@@ -41,7 +41,7 @@
 -   throw(...)
 -   wrap(...)
 -   unwrap(str)
--   view(arg)
+-   tostring(arg [, <false>/<true>])
 -   compress(str [,<"deflate">/<"gzip">])
 -   uncompress(str [,<"deflate">/<"gzip">])
 
@@ -69,7 +69,7 @@
 -   os.debugging()
 
  **rpc functions** 
--   rpc.create(name, func [, <true>/<false>])
+-   rpc.create(name, func [, <false>/<true>])
 -   rpc.new([mask] [, receiver] [, timeout]) #9
 -   rpc.remove(name)
 -   rpc.caller()

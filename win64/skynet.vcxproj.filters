@@ -135,7 +135,7 @@
     <ClCompile Include="..\src\extend\lua_skiplist.cpp">
       <Filter>源文件\extend</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\core\lua_format.cpp">
+    <ClCompile Include="..\src\core\lua_tostring.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
   </ItemGroup>
@@ -233,7 +233,7 @@
     <ClInclude Include="..\src\extend\lua_skiplist.h">
       <Filter>源文件\extend</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\core\lua_format.h">
+    <ClInclude Include="..\src\core\lua_tostring.h">
       <Filter>源文件\core</Filter>
     </ClInclude>
   </ItemGroup>

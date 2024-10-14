@@ -1,7 +1,7 @@
 
 
 #include <set>
-#include "lua_format.h"
+#include "lua_tostring.h"
 
 /********************************************************************************/
 
@@ -122,7 +122,19 @@ static void dump_object(lua_State* L, int i, int lv, std::string& s) {
   dump_other(L, i, s);
 }
 
-static int luac_toview(lua_State* L) {
+static int luac_tostring(lua_State* L) {
+  luaL_checkany(L, 1);
+  if (lua_isnone(L, 2)) {
+    luaL_tolstring(L, 1, NULL);
+    return 1;
+  }
+  if (lua_type(L, 2) != LUA_TBOOLEAN) {
+    luaL_error(L, "boolean expected");
+  }
+  if (lua_toboolean(L, 2) == 0) {
+    luaL_tolstring(L, 1, NULL);
+    return 1;
+  }
   std::string s;
   dump_object(L, 1, 0, s);
   lua_pushlstring(L, s.c_str(), s.size());
@@ -131,10 +143,10 @@ static int luac_toview(lua_State* L) {
 
 /********************************************************************************/
 
-SKYNET_API int luaopen_format(lua_State* L) {
+SKYNET_API int luaopen_tostring(lua_State* L) {
   const luaL_Reg methods[] = {
-    { "view",  luac_toview  },
-    { NULL,     NULL        }
+    { "tostring",   luac_tostring },
+    { NULL,         NULL          }
   };
   return new_module(L, LUA_GNAME, methods);
 }
