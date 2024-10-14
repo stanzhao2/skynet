@@ -7,8 +7,11 @@
 
 /*******************************************************************************/
 
+typedef std::string key_type;
+typedef std::string value_type;
+
 static std::recursive_mutex _mutex;
-static std::map<std::string, std::string> _storage;
+static std::map<key_type, value_type> _storage;
 
 struct pcall_context {
   template <typename _Mutex>
@@ -16,8 +19,8 @@ struct pcall_context {
     : lock(mutex) {
   }
   int top = 0;
-  std::string key;
-  std::string old_value;
+  key_type   key;
+  value_type old_value;
   std::unique_lock<std::recursive_mutex> lock;
 };
 
@@ -41,9 +44,9 @@ static int finishpcall(lua_State *L, int status, lua_KContext extra) {
   size_t size = 0;
   const char* data = luaL_checklstring(L, -1, &size);
 
-  std::string key = std::move(context->key);
-  std::string old_value = std::move(context->old_value);
-  _storage[key] = std::move(std::string(data, size));
+  key_type key = std::move(context->key);
+  value_type old_value = std::move(context->old_value);
+  _storage[key] = std::move(value_type(data, size));
   if (old_value.empty()) {
     lua_pushboolean(L, 1);
     lua_pushnil(L);
@@ -57,12 +60,10 @@ static int finishpcall(lua_State *L, int status, lua_KContext extra) {
 /*******************************************************************************/
 
 static int luac_set(lua_State* L) {
-  std::string old_value;
-  std::string key = luaL_checkstring(L, 1);
-  int top = lua_gettop(L);
-  if (top < 2) {
-    luaL_error(L, "no value");
-  }
+  value_type old_value;
+  key_type key = luaL_checkstring(L, 1);
+  luaL_checkany(L, 2);
+
   lua_wrap(L, lua_gettop(L) - 1);
   std::unique_lock<std::recursive_mutex> lock(_mutex);
   auto iter = _storage.find(key);
@@ -71,7 +72,7 @@ static int luac_set(lua_State* L) {
   }
   size_t len = 0;
   const char* str = luaL_checklstring(L, -1, &len);
-  _storage[key] = std::move(std::string(str, len));
+  _storage[key] = std::move(value_type(str, len));
   if (old_value.empty()) {
     lua_pushnil(L);
     return 1;
@@ -105,7 +106,7 @@ static int luac_set_if(lua_State* L) {
 }
 
 static int luac_get(lua_State* L) {
-  std::string key = luaL_checkstring(L, 1);
+  key_type key = luaL_checkstring(L, 1);
   std::unique_lock<std::recursive_mutex> lock(_mutex);
 
   auto iter = _storage.find(key);
@@ -113,13 +114,13 @@ static int luac_get(lua_State* L) {
     lua_pushnil(L);
     return 1;
   }
-  std::string value = iter->second;
+  value_type value = iter->second;
   lua_pushlstring(L, value.c_str(), value.size());
   return lua_unwrap(L);
 }
 
 static int luac_exist(lua_State* L) {
-  std::string key = luaL_checkstring(L, 1);
+  key_type key = luaL_checkstring(L, 1);
   std::unique_lock<std::recursive_mutex> lock(_mutex);
   auto iter = _storage.find(key);
   if (iter == _storage.end()) {
@@ -132,14 +133,14 @@ static int luac_exist(lua_State* L) {
 }
 
 static int luac_erase(lua_State* L) {
-  std::string key = luaL_checkstring(L, 1);
+  key_type key = luaL_checkstring(L, 1);
   std::unique_lock<std::recursive_mutex> lock(_mutex);
   auto iter = _storage.find(key);
   if (iter == _storage.end()) {
     lua_pushnil(L);
     return 1;
   }
-  std::string value = iter->second;
+  value_type value = iter->second;
   _storage.erase(iter);
   lua_pushlstring(L, value.c_str(), value.size());
   return lua_unwrap(L);
