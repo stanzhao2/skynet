@@ -792,11 +792,14 @@ static void push_provider(lua_State* L, const rpcall_set_type& list) {
     lua_pushstring(L, is_local(node.who) ? "local" : "remote");
     lua_setfield(L, -2, "type");
 
+    lua_pushinteger(L, node.who);
+    lua_setfield(L, -2, "receiver");
+
     lua_pushboolean(L, (node.opt || !is_local(node.who)) ? 1 : 0);
     lua_setfield(L, -2, "public");
 
     lua_pushstring(L, node.osname.c_str());
-    lua_setfield(L, -2, "creater");
+    lua_setfield(L, -2, "module");
     lua_rawseti(L, -2, i++);
   }
 }
