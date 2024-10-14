@@ -109,11 +109,11 @@ static void pload_thread(lua_State* L, pload_context* context) {
 
 /* start a lua microservice */
 static int luac_pload(lua_State* L) {
-  size_t size;
   int argc = lua_gettop(L) - 1;
   if (argc < 0) {
     luaL_error(L, "no name");
   }
+  size_t size = 0;
   const char* argv = "";
   const char* name = luaL_checkstring(L, 1);
   if (*name == 0) {
