@@ -46,7 +46,8 @@ end
 local function lua_bind(info, caller)
   local name = info.name;
   if not is_local(caller) then
-    r_bind(name, caller, info.rcb);
+    local from = info.module;
+    r_bind(name, from, caller, info.rcb);
   end
   if not r_handlers[caller] then
     r_handlers[caller] = {};

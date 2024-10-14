@@ -21,7 +21,8 @@ static void dump_key(lua_State* L, int i, int lv, std::string& s) {
   s += "[";
   int t = lua_type(L, i);
   append_if_string(t, s, "\"");
-  s.append(luaL_tolstring(L, i, &n), n);
+  auto p = luaL_tolstring(L, i, &n);
+  s.append(p, n);
   append_if_string(t, s, "\"");
   s += "] = ";
   lua_pop(L, 1);
@@ -32,7 +33,8 @@ static void dump_value(lua_State* L, int i, int lv, std::string& s) {
   int t = lua_type(L, i);
   int x = lua_type(L, 1);
   append_if_string(t, s, "\"");
-  s.append(luaL_tolstring(L, i, &n), n);
+  auto p = luaL_tolstring(L, i, &n);
+  s.append(p, n);
   append_if_string(t, s, "\"");
   lua_pop(L, 1);
 }

@@ -13,6 +13,7 @@ typedef struct __node_type {
   size_t who = 0;
   int rcb = 0; /* callback refer */
   int opt = 0; /* enable call by remote */
+  std::string osname;
   inline bool operator<(const __node_type& r) const {
     return who < r.who;
   }
@@ -293,7 +294,7 @@ static int forword(const topic_type& topic, const char* data, size_t size, size_
 }
 
 /* send bind or unbind request */
-static int dispatch(const topic_type& topic, const std::string& what, int rcb, size_t caller) {
+static int dispatch(const topic_type& topic, const std::string& osname, const std::string& what, int rcb, size_t caller) {
   auto service = find_service(watcher_ios);
   if (service) {
     service->post(
@@ -306,6 +307,8 @@ static int dispatch(const topic_type& topic, const std::string& what, int rcb, s
         lua_setfield(L, -2, "what");
         lua_pushlstring(L, topic.c_str(), topic.size());
         lua_setfield(L, -2, "name");
+        lua_pushlstring(L, osname.c_str(), osname.size());
+        lua_setfield(L, -2, "module");
         lua_pushinteger(L, (lua_Integer)rcb);
         lua_setfield(L, -2, "rcb");
         lua_pushinteger(L, (lua_Integer)caller);
@@ -579,14 +582,19 @@ static int luac_declare(lua_State* L) {
   int opt = luaL_optboolean(L, 3, 0);
   int who = lua_service()->id();
   int rcb = lua_ref(L, 2);
-  int result = lua_r_bind(name, who, rcb, opt);
+
+  lua_getglobal(L, "__progname");
+  std::string osname(luaL_checkstring(L, -1));
+  lua_pop(L, 1);
+
+  int result = lua_r_bind(name, osname.c_str(), who, rcb, opt);
   if (result != LUA_OK) {
     lua_unref(L, rcb);
     lua_pushboolean(L, 0);
   }
   else {
     lua_pushboolean(L, 1);
-    if (opt) dispatch(name, evr_bind, rcb, who);
+    if (opt) dispatch(name, osname, evr_bind, rcb, who);
   }
   return 1;
 }
@@ -596,10 +604,14 @@ static int luac_undeclare(lua_State* L) {
   const char* name = luaL_checkstring(L, 1);
   int who = lua_service()->id();
   int opt = 0;
+  lua_getglobal(L, "__progname");
+  std::string osname(luaL_checkstring(L, -1));
+  lua_pop(L, 1);
+
   int rcb = lua_r_unbind(name, who, &opt);
   if (rcb) {
     lua_unref(L, rcb);
-    if (opt) dispatch(name, evr_unbind, rcb, who);
+    if (opt) dispatch(name, osname, evr_unbind, rcb, who);
   }
   lua_pushboolean(L, rcb ? 1 : 0);
   return 1;
@@ -626,9 +638,10 @@ static int luac_lookout(lua_State* L) {
 
 static int luac_r_bind(lua_State* L) {
   const char* name = luaL_checkstring(L, 1);
-  size_t who = luaL_checkinteger(L, 2);
-  int rcb = (int)luaL_checkinteger(L, 3);
-  int result = lua_r_bind(name, who, rcb, 0);
+  const char* osname = luaL_checkstring(L, 2);
+  size_t who = luaL_checkinteger(L, 3);
+  int rcb = (int)luaL_checkinteger(L, 4);
+  int result = lua_r_bind(name, osname, who, rcb, 0);
   lua_pushboolean(L, result == LUA_OK ? 1 : 0);
   return 1;
 }
@@ -771,6 +784,30 @@ struct lua_newrpc final {
   size_t mask, receiver, timeout;
 };
 
+static int luac_dump(lua_State* L) {
+  lua_createtable(L, 0, (int)rpcall_handlers.size());
+  unique_mutex_lock(_mutex);
+  auto iter = rpcall_handlers.begin();
+  for (; iter != rpcall_handlers.end(); ++iter) {
+    int i = 1;
+    lua_createtable(L, (int)iter->second.size(), 0);
+    for (auto& node : iter->second) {
+      lua_createtable(L, 2, 0);
+      lua_pushstring(L, is_local(node.who) ? "local" : "remote");
+      lua_setfield(L, -2, "type");
+
+      lua_pushboolean(L, (node.opt || !is_local(node.who)) ? 1 : 0);
+      lua_setfield(L, -2, "public");
+
+      lua_pushstring(L, node.osname.c_str());
+      lua_setfield(L, -2, "creater");
+      lua_rawseti(L, -2, i++);
+    }
+    lua_setfield(L, -2, iter->first.c_str());
+  }
+  return 1;
+}
+
 static int luac_create(lua_State* L) {
   return lua_newrpc::create(L);
 }
@@ -783,6 +820,7 @@ SKYNET_API int luaopen_rpcall(lua_State* L) {
     { "lookout",    luac_lookout    },
     { "create",     luac_declare    },
     { "new",        luac_create     },
+    { "dump",       luac_dump       },
     { "remove",     luac_undeclare  },
     { "caller",     luac_r_caller   },
     { "responser",  luac_r_handler  },
@@ -830,11 +868,12 @@ SKYNET_API int lua_r_unbind(const char* name, size_t who, int* opt) {
   return rcb;
 }
 
-SKYNET_API int lua_r_bind(const char* name, size_t who, int rcb, int opt) {
+SKYNET_API int lua_r_bind(const char* name, const char* osname, size_t who, int rcb, int opt) {
   node_type node;
   node.who = who;
   node.rcb = rcb;
   node.opt = opt;
+  node.osname.assign(osname);
 
   topic_type topic(name);
   unique_mutex_lock(_mutex);
