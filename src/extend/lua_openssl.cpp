@@ -47,10 +47,6 @@ static bool luaL_getboolean(lua_State* L, int index) {
   return lua_toboolean(L, index) ? true : false;
 }
 
-static bool luaL_optboolean(lua_State* L, int index, bool def = false) {
-  return lua_isnoneornil(L, index) ? def : luaL_getboolean(L, index);
-}
-
 static std::string to_string(const std::string& data) {
   std::string ret;
   char buf[32];
@@ -66,7 +62,7 @@ static int hmac_hash(lua_State* L, const EVP_MD* evp) {
   size_t len, klen;
   const char* cs  = luaL_checklstring(L, 1, &len);
   const char* key = luaL_checklstring(L, 2, &klen);
-  bool raw = luaL_optboolean(L, 3, false);
+  auto raw = luaL_optboolean(L, 3, 0);
   unsigned char bs[EVP_MAX_MD_SIZE];
 
   unsigned int n;
@@ -143,7 +139,7 @@ static int base64_decode(lua_State* L) {
 static int hash_md5(lua_State* L) {
   size_t size = 0;
   const char* data = luaL_checklstring(L, 1, &size);
-  bool raw = luaL_optboolean(L, 2, false);
+  auto raw = luaL_optboolean(L, 2, 0);
   unsigned char hash[MD5_DIGEST_LENGTH];
   MD5_CTX md5c;
   MD5_Init(&md5c);
@@ -170,7 +166,7 @@ static int hash_hmac_md5(lua_State* L) {
 static int hash_sha1(lua_State* L) {
   size_t size = 0;
   const char* data = luaL_checklstring(L, 1, &size);
-  bool raw = luaL_optboolean(L, 2, false);
+  auto raw = luaL_optboolean(L, 2, 0);
   unsigned char hash[SHA_DIGEST_LENGTH];
   SHA_CTX sha1;
   SHA1_Init(&sha1);
@@ -197,7 +193,7 @@ static int hash_hmac_sha1(lua_State* L) {
 static int hash_sha224(lua_State* L) {
   size_t size = 0;
   const char* data = luaL_checklstring(L, 1, &size);
-  bool raw = luaL_optboolean(L, 2, false);
+  auto raw = luaL_optboolean(L, 2, 0);
   unsigned char hash[SHA224_DIGEST_LENGTH];
   SHA256_CTX sha1;
   SHA224_Init(&sha1);
@@ -224,7 +220,7 @@ static int hash_hmac_sha224(lua_State* L) {
 static int hash_sha256(lua_State* L) {
   size_t size = 0;
   const char* data = luaL_checklstring(L, 1, &size);
-  bool raw = luaL_optboolean(L, 2, false);
+  auto raw = luaL_optboolean(L, 2, 0);
   unsigned char hash[SHA256_DIGEST_LENGTH];
   SHA256_CTX sha256;
   SHA256_Init(&sha256);
@@ -251,7 +247,7 @@ static int hash_hmac_sha256(lua_State* L) {
 static int hash_sha384(lua_State* L) {
   size_t size = 0;
   const char* data = luaL_checklstring(L, 1, &size);
-  bool raw = luaL_optboolean(L, 2, false);
+  auto raw = luaL_optboolean(L, 2, 0);
   unsigned char hash[SHA384_DIGEST_LENGTH];
   SHA512_CTX sha1;
   SHA384_Init(&sha1);
@@ -278,7 +274,7 @@ static int hash_hmac_sha384(lua_State* L) {
 static int hash_sha512(lua_State* L) {
   size_t size = 0;
   const char* data = luaL_checklstring(L, 1, &size);
-  bool raw = luaL_optboolean(L, 2, false);
+  auto raw = luaL_optboolean(L, 2, 0);
   unsigned char hash[SHA512_DIGEST_LENGTH];
   SHA512_CTX sha1;
   SHA512_Init(&sha1);

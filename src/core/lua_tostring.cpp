@@ -128,10 +128,7 @@ static int luac_tostring(lua_State* L) {
     luaL_tolstring(L, 1, NULL);
     return 1;
   }
-  if (lua_type(L, 2) != LUA_TBOOLEAN) {
-    luaL_error(L, "boolean expected");
-  }
-  if (lua_toboolean(L, 2) == 0) {
+  if (luaL_optboolean(L, 2, 0) == 0) {
     luaL_tolstring(L, 1, NULL);
     return 1;
   }

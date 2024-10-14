@@ -92,6 +92,25 @@ public:
 
 /***********************************************************************************/
 
+inline int luaF_optboolean(lua_State* L, int i, int v) {
+  auto t = lua_type(L, i);
+  switch (t) {
+  case LUA_TNONE:
+    return v == 0 ? 0 : 1;
+  case LUA_TBOOLEAN:
+    return lua_toboolean(L, i);
+  default:
+    luaL_error(L, "bad argument #%d (boolean expected, got %s)", i, lua_typename(L, t));
+  }
+  return 0;
+}
+
+#ifndef luaL_optboolean
+#define luaL_optboolean(L, i, v) luaF_optboolean(L, i, v)
+#endif
+
+/***********************************************************************************/
+
 template <typename _Ty, typename ...Args>
 _Ty* newuserdata(lua_State* L, const char* name, Args... args) {
   void* userdata = lua_newuserdata(L, sizeof(_Ty));

@@ -576,10 +576,7 @@ static int luac_rpcall(lua_State* L) {
 static int luac_declare(lua_State* L) {
   const char* name = luaL_checkstring(L, 1);
   luaL_checktype(L, 2, LUA_TFUNCTION);
-  int opt = 0;
-  if (lua_type(L, 3) == LUA_TBOOLEAN) {
-    opt = lua_toboolean(L, 3);
-  }
+  int opt = luaL_optboolean(L, 3, 0);
   int who = lua_service()->id();
   int rcb = lua_ref(L, 2);
   int result = lua_r_bind(name, who, rcb, opt);
