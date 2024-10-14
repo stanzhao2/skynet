@@ -785,8 +785,8 @@ struct lua_newrpc final {
 };
 
 static int luac_dump(lua_State* L) {
-  lua_createtable(L, 0, (int)rpcall_handlers.size());
   unique_mutex_lock(_mutex);
+  lua_createtable(L, 0, (int)rpcall_handlers.size());
   auto iter = rpcall_handlers.begin();
   for (; iter != rpcall_handlers.end(); ++iter) {
     int i = 1;
