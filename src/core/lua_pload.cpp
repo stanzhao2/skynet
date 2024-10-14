@@ -132,7 +132,7 @@ static int luac_pload(lua_State* L) {
   context->L      = 0;
   context->ios    = 0;
   context->name   = name;
-  context->argv   = argv;
+  context->argv.assign(argv, size);
   context->thread = std::make_shared<std::thread>(std::bind(pload_thread, L, context));
 
   while (context->state == pload_state::pending) {

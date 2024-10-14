@@ -69,7 +69,9 @@ static int luac_set(lua_State* L) {
   if (iter != _storage.end()) {
     old_value = iter->second;
   }
-  _storage[key] = luaL_checkstring(L, -1);
+  size_t len = 0;
+  const char* str = luaL_checklstring(L, -1, &len);
+  _storage[key] = std::move(std::string(str, len));
   if (old_value.empty()) {
     lua_pushnil(L);
     return 1;
