@@ -39,23 +39,34 @@ SKYNET_API bool is_debugging() {
 #endif
 }
 
+SKYNET_API int skynet_execute(int argc, const char* argv[]) {
+  lua_State* L = lua_local();
+  luaL_checkversion(L);
+  int result = skynet_main(L, argc, argv);
+  lua_close(L);
+  return result;
+}
+
 SKYNET_API int main(int argc, const char* argv[]) {
 #ifdef _MSC_VER
-  SetConsoleOutputCP(65001);
+  const UINT pagecode = 65001;
+  const UINT output_code = GetConsoleOutputCP();
+  if (output_code != pagecode) {
+    SetConsoleOutputCP(pagecode);
+  }
+#else
+  setenv("LC_CTYPE", "en_US.UTF-8", 1);
 #endif
-  const char* progname = argv[0];
-  progname = parse_progname(progname);
+  int result = 0;
+  const char* progname = parse_progname(argv[0]);
   if (argc <= 1) {
     copyright(progname); //copyright
   }
   else {
-    lua_State* L = lua_local();
-    luaL_checkversion(L);
-    skynet_main(L, argc - 1, argv + 1);
-    lua_close(L);
+    result = skynet_execute(argc - 1, argv + 1);
     printf("%s has exits normally.\n\n", progname);
   }
-  return 0;
+  return result;
 }
 
 /***********************************************************************************/
