@@ -100,7 +100,7 @@ inline int luaF_optboolean(lua_State* L, int i, int v) {
   case LUA_TBOOLEAN:
     return lua_toboolean(L, i);
   default:
-    luaL_error(L, "bad argument #%d (boolean expected, got %s)", i, lua_typename(L, t));
+    luaL_argerror(L, i, "boolean expected");
   }
   return 0;
 }
