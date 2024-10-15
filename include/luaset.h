@@ -94,15 +94,11 @@ public:
 
 inline int luaF_optboolean(lua_State* L, int i, int v) {
   auto t = lua_type(L, i);
-  switch (t) {
-  case LUA_TNONE:
+  if (t == LUA_TNONE) {
     return v == 0 ? 0 : 1;
-  case LUA_TBOOLEAN:
-    return lua_toboolean(L, i);
-  default:
-    luaL_argerror(L, i, "boolean expected");
   }
-  return 0;
+  luaL_argexpected(L, t == LUA_TBOOLEAN, i, "boolean");
+  return lua_toboolean(L, i);
 }
 
 #ifndef luaL_optboolean
