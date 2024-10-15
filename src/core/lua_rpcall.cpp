@@ -659,7 +659,7 @@ static int luac_r_response(lua_State* L) {
   const char* data = luaL_checklstring(L, 1, &size);
   size_t caller = luaL_checkinteger(L, 2);
   if (!is_local(caller)) {
-    luaL_error(L, "#2 out of range: %d", caller);
+    luaL_argerror(L, 2, "out of range");
   }
   int rcf = (int)luaL_checkinteger(L, 3);
   size_t sn = luaL_checkinteger(L, 4);
@@ -677,10 +677,10 @@ static int luac_r_deliver(lua_State* L) {
   size_t who       = luaL_checkinteger(L, 4);
   size_t caller    = luaL_checkinteger(L, 5);
   if (!is_local(who)) {
-    luaL_error(L, "#4 out of range: %d", who);
+    luaL_argerror(L, 4, "out of range");
   }
   if (is_local(caller)) {
-    luaL_error(L, "#5 out of range: %d", caller);
+    luaL_argerror(L, 5, "out of range");
   }
   int rcf = (int)luaL_checkinteger(L, 6);
   size_t sn = luaL_checkinteger(L, 7);

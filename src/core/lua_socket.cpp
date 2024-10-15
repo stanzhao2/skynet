@@ -187,7 +187,7 @@ struct lua_socket final {
       value = self->socket->response_header().get_header(name);
     }
     else {
-      luaL_error(L, "invalid type: %s", what.c_str());
+      luaL_argerror(L, 3, "must be 'request' or 'response'");
     }
     if (value.empty()) {
       lua_pushnil(L);

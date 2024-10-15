@@ -11,7 +11,7 @@ static int gzip_deflate(lua_State *L) {
   const char* data = (char*)luaL_checklstring(L, 1, &size);
   std::string type = luaL_optstring(L, 2, "deflate");
   if (type != "gzip" && type != "deflate") {
-    luaL_error(L, "unknown type: %s", type);
+    luaL_argerror(L, 2, "must be 'gzip' or 'deflate'");
   }
   std::string output;
   bool gzip = (type == "gzip") ? true : false;
@@ -29,7 +29,7 @@ static int gzip_inflate(lua_State *L) {
   const char* data = (char*)luaL_checklstring(L, 1, &size);
   std::string type = luaL_optstring(L, 2, "inflate");
   if (type != "gzip" && type != "inflate") {
-    luaL_error(L, "unknown type: %s", type);
+    luaL_argerror(L, 2, "must be 'gzip' or 'inflate'");
   }
   std::string output;
   bool gzip = (type == "gzip") ? true : false;

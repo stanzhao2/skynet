@@ -109,15 +109,13 @@ static void pload_thread(lua_State* L, pload_context* context) {
 
 /* start a lua microservice */
 static int luac_pload(lua_State* L) {
+  luaL_checkany(L, 1);
   int argc = lua_gettop(L) - 1;
-  if (argc < 0) {
-    luaL_error(L, "no name");
-  }
   size_t size = 0;
   const char* argv = "";
   const char* name = luaL_checkstring(L, 1);
   if (*name == 0) {
-    luaL_error(L, "no name");
+    luaL_argerror(L, 1, "string is empty");
   }
   if (argc > 0) {
     lua_wrap(L, argc);
