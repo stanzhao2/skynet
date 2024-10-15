@@ -54,6 +54,9 @@ static void openlibs(lua_State* L, const lua_CFunction f[]) {
       lua_error(L);
     }
   }
+  if (lua_gettop(L) > 0) {
+    lua_ftrace("%s", "WARNNING: stack exception");
+  }
   lua_gc(L, LUA_GCRESTART);
   lua_gc(L, LUA_GCGEN, 0, 0);
 }
@@ -64,14 +67,11 @@ static lua_State* newstate() {
     lua_atpanic (L, &panic);
     lua_setwarnf(L, warnfoff, L); /* default is warnings off */
     openlibs(L, skynet_modules);
-    if (lua_gettop(L) > 0) {
-      lua_ftrace("%s", "WARNNING: stack exception");
-    }
   }
   return L;
 }
 
-SKYNET_API lua_State* skynet_local() {
+SKYNET_API lua_State* skynet_state() {
   static thread_local lua_State* L = newstate();
   return L;
 }
