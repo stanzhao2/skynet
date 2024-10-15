@@ -80,16 +80,16 @@ static void foutput(const char* msg, color_type color) {
   localtime(prefix, sizeof(prefix));
 
 #ifndef _MSC_VER
-  printf("\033[1;36m%s\033[0m", prefix);
+  fprintf(stdout, "\033[1;36m%s\033[0m", prefix);
   switch (color) {
   case color_type::print:
-    printf("\033[1;36m%s\033[0m", msg);
+    fprintf(stdout, "\033[1;36m%s\033[0m", msg);
     break;
   case color_type::trace:
-    printf("\033[1;33m%s\033[0m", msg);
+    fprintf(stdout, "\033[1;33m%s\033[0m", msg);
     break;
   case color_type::error:
-    printf("\033[1;31m%s\033[0m", msg);
+    fprintf(stdout, "\033[1;31m%s\033[0m", msg);
     break;
   default: break;
   }
@@ -114,9 +114,9 @@ static void foutput(const char* msg, color_type color) {
   }
   WORD defclr = FOREGROUND_INTENSITY | FOREGROUND_GREEN | FOREGROUND_BLUE;
   SetConsoleTextAttribute(h, defclr);
-  printf("%s", prefix);
+  fprintf(stdout, "%s", prefix);
   SetConsoleTextAttribute(h, text_color);
-  printf("%s", msg);
+  fprintf(stdout, "%s", msg);
   SetConsoleTextAttribute(h, si.wAttributes);
 #endif
 }
@@ -153,10 +153,10 @@ static int luac_error(lua_State* L) {
 
 int luaopen_print(lua_State* L) {
   const luaL_Reg methods[] = {
-    { "print",    luac_print    }, /* print (arg1 [, ...]) */
-    { "trace",    luac_trace    }, /* trace (arg1 [, ...]) */
-    { "error",    luac_error    }, /* error (arg1 [, ...]) */
-    { "throw",    luac_throw    }, /* throw (arg1 [, ...]) */
+    { "print",    luac_print    }, /* print (...) */
+    { "trace",    luac_trace    }, /* trace (...) */
+    { "error",    luac_error    }, /* error (...) */
+    { "throw",    luac_throw    }, /* throw (...) */
     { NULL,       NULL          }
   };
   return new_module(L, LUA_GNAME, methods);
