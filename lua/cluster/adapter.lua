@@ -23,6 +23,18 @@ local const_max <const> = 0xffff;
 
 --------------------------------------------------------------------------------
 
+local function encode(t)
+  return proto_type.encode(t);
+end
+
+--------------------------------------------------------------------------------
+
+local function decode(v)
+  return proto_type.decode(v);
+end
+
+--------------------------------------------------------------------------------
+
 local function is_local(who)
   return who <= const_max;
 end
@@ -101,7 +113,7 @@ local function ws_on_receive(peer, data, ec)
     return;
   end
   local id   = peer:id();
-  local info = unwrap(data);
+  local info = decode(data);
   local what = info.what;
   
   if what == proto_type.deliver then
@@ -144,12 +156,12 @@ local function on_lookout(info)
   local what = info.what;  
   if what == proto_type.bind then
     lua_bind(info, info.caller);
-    sendto_others(wrap(info));
+    sendto_others(encode(info));
     return;
   end
   if what == proto_type.unbind then
     lua_unbind(info.name, info.caller);
-    sendto_others(wrap(info));
+    sendto_others(encode(info));
     return;
   end
   local id;
@@ -163,7 +175,7 @@ local function on_lookout(info)
   end
   local session = active_sessions[id];
   if session then
-    sendto_member(wrap(info), session);
+    sendto_member(encode(info), session);
   end
 end
 
@@ -187,7 +199,7 @@ local function new_session(peer)
   for caller, bounds in pairs(r_handlers) do
     if is_local(caller) then
       for name, info in pairs(bounds) do
-        peer:send(wrap(info));
+        peer:send(encode(info));
       end
     end
   end
@@ -240,10 +252,10 @@ local function connect_members(socket, protocol)
     if not data then
       return false;
     end
-    local packet = unwrap(data);
+    local packet = decode(data);
     if packet.what == proto_type.ready then
       break;
-    end    
+    end
     if packet.what ~= proto_type.forword then
       return false;
     end

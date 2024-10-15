@@ -13,6 +13,10 @@ local format = string.format;
 local proto_type = require("cluster.protocol");
 local active_sessions = {};
 
+local function encode(t)
+  return proto_type.encode(t);
+end
+
 --------------------------------------------------------------------------------
 
 local function sendto_member(session)
@@ -24,11 +28,11 @@ local function sendto_member(session)
         ip   = v.ip,
         port = v.port,
       };
-      session.socket:send(wrap(packet));
+      session.socket:send(encode(packet));
     end
   end
   local peer = session.socket;
-  peer:send(wrap({what = proto_type.ready}));
+  peer:send(encode({what = proto_type.ready}));
 end
 
 --------------------------------------------------------------------------------
