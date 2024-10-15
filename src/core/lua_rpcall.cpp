@@ -963,6 +963,7 @@ SKYNET_API int lua_r_deliver(const char* name, const char* data, size_t size, si
       node.who = receiver = select[i].who;
     }
   }
+  int count = 0;
   /* if there is a receiver */
   if (receiver > 0) {
     auto find = val.find(node);
@@ -976,15 +977,16 @@ SKYNET_API int lua_r_deliver(const char* name, const char* data, size_t size, si
       }
     }
     auto rcb = find->rcb;
-    return dispatch(topic, rcb, data, size, mask, receiver, caller, rcf, sn);
+    count = dispatch(topic, rcb, data, size, mask, receiver, caller, rcf, sn);
   }
   /* dispatch to all receivers */
-  int count = 0;
-  auto find = val.begin();
-  for (; find != val.end(); ++find) {
-    auto rcb = find->rcb;
-    auto who = find->who;
-    count += dispatch(topic, rcb, data, size, mask, who, caller, rcf, sn);
+  else {
+    auto find = val.begin();
+    for (; find != val.end(); ++find) {
+      auto rcb = find->rcb;
+      auto who = find->who;
+      count += dispatch(topic, rcb, data, size, mask, who, caller, rcf, sn);
+    }
   }
   return count;
 }
