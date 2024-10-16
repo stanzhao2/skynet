@@ -206,7 +206,7 @@ static int check_timeout(lua_State* L, size_t expires) {
   static thread_local size_t _lastgc = rand();
   static thread_local steady_timer _timer(*lua_service());
   /* GC every one minute */
-  size_t gc_expires = is_debugging() ? expires : 60000;
+  size_t gc_expires = is_debugging(L) ? expires : 60000;
   if ((_lastgc += expires) >= gc_expires) {
     _lastgc = 0;
     lua_gc(L, LUA_GCCOLLECT);

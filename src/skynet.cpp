@@ -31,11 +31,13 @@ static const char* parse_progname(const char* filename) {
 
 /***********************************************************************************/
 
-SKYNET_API bool is_debugging() {
-#if defined(LUA_DEBUG) || defined(_MSC_VER)
+SKYNET_API bool is_debugging(lua_State* L) {
+#if !defined(_MSC_VER)
+  return false;
+#elseif defined(LUA_DEBUG)
   return true;
 #else
-  return false;
+  return lua_gethookmask(L) ? true : false;
 #endif
 }
 

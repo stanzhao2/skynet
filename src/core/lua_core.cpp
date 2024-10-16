@@ -216,7 +216,7 @@ static int os_dirsep(lua_State* L) {
 }
 
 static int os_debugging(lua_State* L) {
-  auto debug = is_debugging();
+  auto debug = is_debugging(L);
   lua_pushboolean(L, debug ? 1 : 0);
   return 1;
 }

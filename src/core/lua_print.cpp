@@ -134,7 +134,7 @@ static int luac_print(lua_State* L) {
 }
 
 static int luac_trace(lua_State* L) {
-  if (is_debugging()) {
+  if (is_debugging(L)) {
     const char* msg = tostring(L);
     const char* pos = fileline(L);
     lua_printf(color_type::trace, "%s %s\n", pos, msg);
