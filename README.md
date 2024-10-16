@@ -140,9 +140,10 @@
 -   server:endpoint()
 
  **context functions**
--   context:certificate(str)
--   context:key(str)
--   context:password(str)
+-   context:load(pemfile, keyfile [, password])
+-   context:certificate(data)
+-   context:key(data)
+-   context:password(data)
  
  **timer functions**
 -   timer:expires(ms, func)

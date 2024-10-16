@@ -69,9 +69,59 @@ struct ssl_context final {
     if (ec) push_errcode(L, ec);
     return ec ? 2 : 1;
   }
+  static std::string load_file(const char* filename) {
+    std::string data;
+    FILE* fp = fopen(filename, "r");
+    if (fp) {
+      char buffer[8192];
+      while (!feof(fp)) {
+        size_t n = fread(buffer, 1, sizeof(buffer), fp);
+        data.append(buffer, n);
+      }
+      fclose(fp);
+    }
+    return data;
+  }
+  static int load(lua_State* L) {
+    auto self = __this(L);
+    const char* pemname  = luaL_checkstring(L, 2);
+    const char* keyname  = luaL_checkstring(L, 3);
+    const char* password = luaL_optstring(L, 4, nullptr);
+    auto pem = load_file(pemname);
+    if (pem.empty()) {
+      lua_pushboolean(L, 0);
+      return 1;
+    }
+    auto key = load_file(keyname);
+    if (key.empty()) {
+      lua_pushboolean(L, 0);
+      return 1;
+    }
+    error_code ec;
+    use_certificate_chain(
+      self->ctx, pem.c_str(), pem.size(), ec
+    );
+    if (ec) {
+      lua_pushboolean(L, 0);
+      return 1;
+    }
+    use_private_key(
+      self->ctx, key.c_str(), key.size(), ec
+    );
+    if (ec) {
+      lua_pushboolean(L, 0);
+      return 1;
+    }
+    if (password) {
+      use_private_key_pwd(self->ctx, password, ec);
+    }
+    lua_pushboolean(L, 1);
+    return 1;
+  }
   static void init_metatable(lua_State* L) {
     const luaL_Reg methods[] = {
       { "__gc",         __gc        },
+      { "load",         load        },
       { "certificate",  certificate },
       { "key",          key         },
       { "password",     password    },
@@ -426,11 +476,16 @@ struct lua_acceptor final {
   }
   static int listen(lua_State* L) {
     auto self = __this(L);
-    const char* host = luaL_checkstring(L, 2);
-    unsigned short port = (unsigned short)luaL_checkinteger(L, 3);
-    int handler = lua_ref(L, 4);
+    const char* host = nullptr;
+    if (!lua_isnil(L, 2)) {
+      host = luaL_checkstring(L, 2);
+    }
+    unsigned short port = 0;
+    if (!lua_isnil(L, 3)) {
+      port = (unsigned short)luaL_checkinteger(L, 3);
+    }
     luaL_checktype(L, 4, LUA_TFUNCTION);
-
+    int handler = lua_ref(L, 4);
     auto ec = self->server->listen(port, host,
       [handler, self](const error_code& ec, typeof<io::socket> peer) {
         lua_State* L = lua_local();
