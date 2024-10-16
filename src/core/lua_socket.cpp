@@ -159,7 +159,7 @@ struct ssl_context final {
 /********************************************************************************/
 
 template <typename Ty>
-inline typeof<Ty> ref_new_object(lua_State* L, std::string& what) {
+inline typeof<Ty> ref_new_object(lua_State* L, std::string& what, int& ref) {
   auto ios = io::service::local();
   what = luaL_checkstring(L, 1);
   if (what == "tcp") {
@@ -170,10 +170,12 @@ inline typeof<Ty> ref_new_object(lua_State* L, std::string& what) {
   }
   if (what == "ssl") {
     auto p = checkudata<ssl_context>(L, 2, ssl_context::name());
+    ref = lua_ref(L, 2);
     return ref_new<Ty>(ios, std::reference_wrapper<ssl::context>(p->ctx), io::socket::native);
   }
   if (what == "wss") {
     auto p = checkudata<ssl_context>(L, 2, ssl_context::name());
+    ref = lua_ref(L, 2);
     return ref_new<Ty>(ios, std::reference_wrapper<ssl::context>(p->ctx), io::socket::websocket);
   }
   return typeof<Ty>();
@@ -193,6 +195,10 @@ struct lua_socket final {
 #ifdef LUA_DEBUG
     lua_ftrace("DEBUG: %s(#%d) will gc\n", name(), self->socket->id());
 #endif
+    if (self->ref > 0) {
+      lua_unref(L, self->ref);
+      self->ref = 0;
+    }
     self->~lua_socket();
     return 0;
   }
@@ -415,7 +421,7 @@ struct lua_socket final {
       return 2;
     }
     std::string what;
-    self->socket = ref_new_object<io::socket>(L, what);
+    self->socket = ref_new_object<io::socket>(L, what, self->ref);
     if (!self->socket) {
       lua_pushnil(L);
       lua_pushfstring(L, "unknown type: %s", what.c_str());
@@ -431,6 +437,7 @@ struct lua_socket final {
     };
     return new_module(L, "io", methods);
   }
+  int ref = 0;
   typeof<io::socket> socket;
 };
 
@@ -448,6 +455,10 @@ struct lua_acceptor final {
 #ifdef LUA_DEBUG
     lua_ftrace("DEBUG: %s(#%d) will gc\n", name(), self->server->native_handle()->id());
 #endif
+    if (self->ref > 0) {
+      lua_unref(L, self->ref);
+      self->ref = 0;
+    }
     self->~lua_acceptor();
     return 0;
   }
@@ -535,7 +546,7 @@ struct lua_acceptor final {
       return 2;
     }
     std::string what;
-    self->server = ref_new_object<io_socket_server>(L, what);
+    self->server = ref_new_object<io_socket_server>(L, what, self->ref);
     if (!self->server) {
       lua_pushnil(L);
       lua_pushfstring(L, "unknown type: %s", what.c_str());
@@ -551,6 +562,7 @@ struct lua_acceptor final {
     };
     return new_module(L, "io", methods);
   }
+  int ref = 0;
   typeof<io_socket_server> server;
 };
 
