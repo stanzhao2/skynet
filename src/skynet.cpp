@@ -31,16 +31,6 @@ static const char* parse_progname(const char* filename) {
 
 /***********************************************************************************/
 
-SKYNET_API bool is_debugging(lua_State* L) {
-#if !defined(_MSC_VER)
-  return false;
-#elseif defined(LUA_DEBUG)
-  return true;
-#else
-  return lua_gethookmask(L) ? true : false;
-#endif
-}
-
 SKYNET_API int skynet_execute(int argc, const char* argv[]) {
   lua_State* L = lua_local();
   luaL_checkversion(L);

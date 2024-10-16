@@ -15,6 +15,7 @@
 
 /***********************************************************************************/
 
+SKYNET_API bool is_debugging(lua_State* L);
 SKYNET_API lua_State* skynet_state();
 SKYNET_API typeof<io::service> skynet_service();
 

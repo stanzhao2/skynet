@@ -13,8 +13,7 @@
 
 /***********************************************************************************/
 
-SKYNET_API bool is_debugging(lua_State* L);
-SKYNET_API int  skynet_execute(int argc, const char* argv[]);
+SKYNET_API int skynet_execute(int argc, const char* argv[]);
 
 /***********************************************************************************/
 

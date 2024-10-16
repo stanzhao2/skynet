@@ -71,6 +71,16 @@ static lua_State* newstate() {
   return L;
 }
 
+SKYNET_API bool is_debugging(lua_State* L) {
+#if !defined(_MSC_VER)
+  return false;
+#elif defined(LUA_DEBUG)
+  return true;
+#else
+  return lua_gethookmask(L) ? true : false;
+#endif
+}
+
 SKYNET_API lua_State* skynet_state() {
   static thread_local lua_State* L = newstate();
   return L;
